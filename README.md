@@ -14,11 +14,11 @@ Although the simulation environment is designed for all variety of tasks of mani
 
 ### Dependencies
 
-The package runs on Ubuntu 20.04 and ROS noetic.
+This ROS package runs on Ubuntu 20.04 and ROS noetic.
 
 ### Installing
 
-The packages will have to be built from sources in a Catkin workspace:
+The package will have to be built from sources in a Catkin workspace:
 ```
 cd $HOME/catkin_ws/src
 
