@@ -41,7 +41,7 @@ catkin build
 source devel/setup.bash
 ```
 
-### Executing program
+### Executing programs
 
 * Launch the simulated worlds
 ```
