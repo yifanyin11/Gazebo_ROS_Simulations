@@ -1,22 +1,20 @@
 # Gazebo_ROS_Simulations
 This ROS workspace is built for implementing and testing applications of robot arms related to robot manipulations, motion planning and vision-based control. A simulation environment has been constructed using Gazebo, provided rich contents to simulate related experimental setups, such as depth cameras, Robotiq grippers, AR markers, force sensors as well as workbenches, targets and reference objects.
 
-## Packages
-Any applications in which images of (an) object(s) from different angle of views need to be captured, especially when the depth of the objects needs to be specified or precisely controlled. Below are several examples:
+![alt text](https://github.com/yifanyin11/Gazebo_ROS_Simulations/blob/main/repo_data/example.jpg?raw=true)
 
-1. Image collections for neural network training in classification, detection or segmentation applications
-2. Experimental visual validations from all angle of views
+## Tasks
+Although the simulation environment is designed for all variety of tasks of manipulators, there are several tasks in the package "ur5_visual_servos" that can serve as examples:
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
+1. Robot homing process
+2. Simple pick and place task
+3. 3D point-target visual servoing
 
 ## Getting Started
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+The package runs on Ubuntu 20.04 and ROS noetic.
 
 ### Installing
 
@@ -31,12 +29,10 @@ An in-depth paragraph about your project and overview of use.
 code blocks for commands
 ```
 
-## Help
+## Description
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+An in-depth paragraph about your project and overview of use.
+
 
 ## Authors
 
