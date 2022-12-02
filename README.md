@@ -1,5 +1,5 @@
 # Gazebo_ROS_Simulations
-This ROS workspace is built for implementing and testing applications of robot arms related to robot manipulations, motion planning and vision-based control. A simulation environment has been constructed using Gazebo, provided rich contents to simulate experimental setups in related robotic applications, such as depth cameras, Robotiq grippers, AR markers, force sensors as well as workbenches, targets and reference objects.
+This ROS workspace is built for implementing and testing applications of robot arms related to robot manipulations, motion planning and vision-based control. A simulation environment has been constructed using Gazebo, provided rich contents to simulate related experimental setups, such as depth cameras, Robotiq grippers, AR markers, force sensors as well as workbenches, targets and reference objects.
 
 ## Packages
 Any applications in which images of (an) object(s) from different angle of views need to be captured, especially when the depth of the objects needs to be specified or precisely controlled. Below are several examples:
