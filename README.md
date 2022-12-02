@@ -8,7 +8,7 @@ Although the simulation environment is designed for all variety of tasks of mani
 
 1. Robot homing process
 2. Simple pick and place task
-3. 3D points servoing
+3. 3D point-target visual servoing
 
 ## Getting Started
 
