@@ -21,6 +21,7 @@ The package runs on Ubuntu 20.04 and ROS noetic.
 The packages will have to be built from sources in a Catkin workspace:
 ```
 cd $HOME/catkin_ws/src
+
 # retrieve the sources
 git clone https://github.com/yifanyin11/Gazebo_ROS_Simulations.git
 
