@@ -1,5 +1,5 @@
 # Gazebo_ROS_Simulations
-This ROS workspace is built for implementing and testing applications of robot arms related to robot manipulations, motion planning and vision-based control. A simulation environment has been constructed using Gazebo, provided rich contents to simulate related experimental setups, such as depth cameras, Robotiq grippers, AR markers, force sensors as well as workbenches, targets and reference objects.
+This ROS package is built for implementing and testing applications of robot arms related to robot manipulations, motion planning and vision-based control. A simulation environment has been constructed using Gazebo, provided rich contents to simulate related experimental setups, such as depth cameras, Robotiq grippers, AR markers, force sensors as well as workbenches, targets and reference objects.
 
 ![alt text](https://github.com/yifanyin11/Gazebo_ROS_Simulations/blob/main/repo_data/example.jpg?raw=true)
 
@@ -18,8 +18,27 @@ The package runs on Ubuntu 20.04 and ROS noetic.
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+The packages will have to be built from sources in a Catkin workspace:
+```
+cd $HOME/catkin_ws/src
+# retrieve the sources
+git clone https://github.com/yifanyin11/Gazebo_ROS_Simulations.git
+
+# install dependencies from sources
+git clone https://github.com/ros-industrial/universal_robot.git
+git clone https://github.com/filesmuggler/robotiq.git
+
+# checking other dependencies
+cd ..
+rosdep update
+rosdep install --from-paths src --ignore-src -y
+
+# building
+catkin build
+
+# activate this workspace
+source devel/setup.bash
+```
 
 ### Executing program
 
