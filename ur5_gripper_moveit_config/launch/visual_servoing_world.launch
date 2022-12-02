@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- specify the planning pipeline -->
+  <arg name="pipeline" default="ompl" />
+
+  <!-- Gazebo specific options -->
+  <arg name="gazebo_gui" default="true"/>
+  <arg name="paused" default="false"/>
+  <arg name="world_name" default="$(find ur5_visual_servos)/world/visual_servo_world.sdf" />
+
+  <!-- launch the gazebo simulator and spawn the robot -->
+  <include file="$(dirname)/gazebo.launch" >
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
+    <arg name="world_name" value="$(arg world_name)" />
+    <arg name="spawn_args" value="-urdf -param robot_description -model robot -x 0 -y 0 -z 1.05"/>
+  </include>
+
+  <include file="$(dirname)/demo.launch" pass_all_args="true">
+    <!-- robot description is loaded by gazebo.launch, to enable Gazebo features -->
+    <arg name="load_robot_description" value="false" />
+    <arg name="moveit_controller_manager" value="ros_control" />
+  </include>
+
+  <rosparam command="load" file="$(find ur5_visual_servos)/config/config.yaml" />
+</launch>
