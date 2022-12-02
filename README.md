@@ -50,7 +50,10 @@ roslaunch ur5_gripper_moveit_config visual_servoing_world.launch
 Gazebo GUI should be launched. You may start the simulation by clicking the "play" button on the bottom toolbar. Rviz interface will show up right after and sychonize the pose of the robot in the simulation.
 
 * Robot homing process
-There are two ways to perform robot homing. 
+
+There are two ways to perform robot homing. A simple way is to use the Motion Planning Rviz plugin. Follow the steps below:
+
+
 ```
 code blocks for commands
 ```
