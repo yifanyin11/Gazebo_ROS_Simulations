@@ -35,6 +35,7 @@ int main(int argc, char** argv){
     // edit ros params
     for (int i=0;i<joint_group_positions.size();++i){
         std::string name = "/home_position/"+joint_names[i];
+        ros::param::set(name, joint_group_positions[i]);
         nh.setParam(name, joint_group_positions[i]);
     }
 

@@ -24,15 +24,20 @@ int main(int argc, char** argv){
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     const robot_state::JointModelGroup* joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
+    moveit::core::RobotStatePtr current_state =  move_group.getCurrentState();
     std::vector<double> joint_group_positions;
     const std::vector<std::string> joint_names = joint_model_group->getActiveJointModelNames();
+    current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
 
     // get ros params
     for (int i=0;i<joint_group_positions.size();++i){
         std::string name = "/home_position/"+joint_names[i];
-        if (nh.getParam(name, joint_group_positions[i]));
+        if (nh.getParam(name, joint_group_positions[i])){
+            ROS_INFO("Got param: %s", name.c_str());
+            std::cout << joint_group_positions[i] << std::endl;
+        }
         else{
-            ROS_ERROR("No parameter named %s!", name);
+            ROS_ERROR("No parameter named %s!", name.c_str());
         }
     }
 
