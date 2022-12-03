@@ -74,11 +74,6 @@ A blue cube and a plate are placed on the workbrench. A simple pick and place ta
 ```
 rosrun ur5_visual_servos pick_and_place
 ```
-  
-## Description
-
-An in-depth paragraph about your project and overview of use.
-
 
 ## Authors
 
@@ -87,10 +82,6 @@ Contributors names and contact info
 Yifan Yin
 
 Email: [yyin34@jhu.edu](yyin34@jhu.edu)
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
 
 ## Acknowledgments
 
