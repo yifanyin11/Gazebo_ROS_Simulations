@@ -51,7 +51,7 @@ Gazebo GUI should be launched. You may start the simulation by clicking the "pla
 
 * Robot homing process
 
-There are two ways to perform robot homing. A simple way is to send the robot to the existing home configuration defined in the urdf through Motion Planning Rviz plugin. Follow the steps below:
+There are two ways to perform robot homing. A simple way is to send the robot to the existing home configuration defined in the .srdf through Motion Planning Rviz plugin. Follow the steps below:
 
 
 ```
