@@ -85,5 +85,4 @@ Email: [yyin34@jhu.edu](yyin34@jhu.edu)
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
 * [Simulation of a Robotiq gripper](https://github.com/filesmuggler/robotiq)
