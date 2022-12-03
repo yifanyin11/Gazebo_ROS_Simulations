@@ -53,9 +53,18 @@ Gazebo GUI should be launched. You may start the simulation by clicking the "pla
 
 There are two ways to perform robot homing. A simple way is to send the robot to the existing home configuration defined in the .srdf through Motion Planning Rviz plugin. Follow the steps below:
 
-
+1. Go to the MotionPlanning panel in Rviz, select "Planning" tab.
+2. Change the Planning Group from the default value of "gripper" to "ur5_arm" using the dropdown menu.
+3. Leave the Start State as <current>; For the Goal State of the planning, select "home" at the bottom of the dropdown. 
+4. Select "Plan" under Commands. Check the trajectory, "Execute" if it's as expected.
+  
+As the other option, you can also customize the home configuration. To do that, you need to move the end effector around to find your desired home pose and execute the planning. Then, set the robot current pose as home configuration by running
 ```
-code blocks for commands
+rosrun ur5_visual_servos set_home_position
+```
+It will record the joint states of that pose in the configuration file for any further reference. Once done, you may home the robot at any pose by simply calling
+```
+rosrun ur5_visual_servos robot_homing
 ```
 
 ## Description
