@@ -77,8 +77,6 @@ rosrun ur5_visual_servos pick_and_place
 
 ## Authors
 
-Contributors names and contact info
-
 Yifan Yin
 
 Email: [yyin34@jhu.edu](yyin34@jhu.edu)
