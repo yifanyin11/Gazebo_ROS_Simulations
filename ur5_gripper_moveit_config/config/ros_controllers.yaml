@@ -37,6 +37,18 @@ controller_list:
     type: FollowJointTrajectory
     joints:
       - robotiq_85_left_knuckle_joint
+  - name: tcp_twist_controller
+    action_ns: follow_joint_trajectory
+    default: True
+    type: FollowJointTrajectory
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+  
 ur5_arm_controller:
   type: effort_controllers/JointTrajectoryController
   joints:
@@ -97,3 +109,13 @@ gripper_controller:
       d: 0
       i: 0
       i_clamp: 1
+tcp_twist_controller:
+  type: ros_controllers_cartesian/TwistController
+  frame_id: "ee_link"
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint

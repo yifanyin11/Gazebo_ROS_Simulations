@@ -8,6 +8,8 @@ project(ur5_visual_servos)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
+find_package(OpenCV REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   interactive_markers
   moveit_core
@@ -16,6 +18,15 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_perception
   rviz_visual_tools
   moveit_visual_tools
+
+  cv_bridge
+  message_generation
+  std_msgs
+  geometry_msgs
+  sensor_msgs
+  actionlib_msgs
+  control_msgs
+
   pluginlib
   geometric_shapes
   pcl_ros
@@ -24,8 +35,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   tf2_geometry_msgs
-  actionlib_msgs
-  control_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,7 +69,14 @@ find_package(Boost REQUIRED system filesystem date_time thread)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-  DEPENDENCIES actionlib_msgs std_msgs trajectory_msgs control_msgs  # Or other packages containing msgs
+  DEPENDENCIES 
+  actionlib_msgs 
+  std_msgs 
+  sensor_msgs
+  trajectory_msgs 
+  control_msgs
+  geometry_msgs
+  # Or other packages containing msgs
 )
 
 ################################################
@@ -79,6 +95,7 @@ generate_messages(
 
 catkin_package(
   LIBRARIES
+    image_capturer
   INCLUDE_DIRS
   CATKIN_DEPENDS
     moveit_core
@@ -96,9 +113,18 @@ catkin_package(
 ## Build ##
 ###########
 
-include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
+include_directories(
+  SYSTEM 
+  include
+  ${catkin_INCLUDE_DIRS} 
+  ${Boost_INCLUDE_DIR} 
+  ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
 
 ## Declare a C++ library
+add_library(image_capturer src/image_capturer.cpp)
+target_link_libraries(image_capturer ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/ur5_visual_servos.cpp
 # )
@@ -114,7 +140,10 @@ add_executable(robot_homing src/robot_homing.cpp)
 target_link_libraries(robot_homing ${catkin_LIBRARIES} ${Boost_LIBRARIES} yaml-cpp)
 
 add_executable(pick_and_place src/pick_and_place.cpp)
-target_link_libraries(pick_and_place ${catkin_LIBRARIES} ${Boost_LIBRARIES} yaml-cpp)
+target_link_libraries(pick_and_place ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(async_move_test src/async_move_test.cpp)
+target_link_libraries(async_move_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
