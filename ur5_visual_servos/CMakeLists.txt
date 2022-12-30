@@ -125,6 +125,9 @@ include_directories(
 ## Declare a C++ library
 add_library(image_capturer src/image_capturer.cpp)
 target_link_libraries(image_capturer ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
+add_library(tool_detector src/tool_detector.cpp)
+target_link_libraries(tool_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/ur5_visual_servos.cpp
 # )

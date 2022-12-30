@@ -9,7 +9,7 @@ void visual_servo::ImageCapturer::imageCallback(const sensor_msgs::ImageConstPtr
     try{
             img_ptr = cv_bridge::toCvCopy(msg, "bgr8");
         }
-        catch (cv_bridge::Exception& e){
+    catch (cv_bridge::Exception& e){
             ROS_ERROR("Could not convert from '%s' to 'bgr8'.\n", msg->encoding.c_str());
         }
 }
