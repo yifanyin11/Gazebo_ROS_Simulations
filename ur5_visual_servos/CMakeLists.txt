@@ -96,6 +96,7 @@ generate_messages(
 catkin_package(
   LIBRARIES
     image_capturer
+    tool_detector
   INCLUDE_DIRS
   CATKIN_DEPENDS
     moveit_core
@@ -147,6 +148,9 @@ target_link_libraries(pick_and_place ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(async_move_test src/async_move_test.cpp)
 target_link_libraries(async_move_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(cv_detection_test src/cv_detection_test.cpp)
+target_link_libraries(cv_detection_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable

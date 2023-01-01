@@ -13,15 +13,16 @@
 namespace visual_servo{
     class ToolDetector{
     private:
+        ros::NodeHandle nh;
         cv::Mat image;
         cv::Point tool_center;
         cv::Point corner1;
         cv::Point corner2;
-        ImageCapturer cam;
+        std::unique_ptr<ImageCapturer> cam_ptr;
 
     public:
         // constructor
-        ToolDetector(ImageCapturer& img_capturer);
+        ToolDetector(ros::NodeHandle& nh, std::string& img_topic);
         // destructor
         ~ToolDetector(){};
         // mutators

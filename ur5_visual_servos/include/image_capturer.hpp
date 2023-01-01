@@ -6,6 +6,9 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 
+#include <cstdlib>
+#include <iostream>
+#include <ctime>
 
 namespace visual_servo{
     class ImageCapturer{
@@ -15,10 +18,13 @@ namespace visual_servo{
         ros::Subscriber img_sub;
         std::string image_topic;
     public:
-        // constructor
+        int count;
+        // constructors
+        ImageCapturer(const ImageCapturer& obj) = default;
         ImageCapturer(ros::NodeHandle& nh, std::string& img_topic);
         // destructor
         ~ImageCapturer(){};
+        // ImageCapturer operator = (ImageCapturer &obj);
         void imageCallback(const sensor_msgs::ImageConstPtr& msg);
         cv::Mat getCurrentImage();
         void saveCurrentImage(std::string imgPath, std::string imgName);

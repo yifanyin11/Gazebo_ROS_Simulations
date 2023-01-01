@@ -1,8 +1,15 @@
 #include "tool_detector.hpp"
 
-visual_servo::ToolDetector::ToolDetector(ImageCapturer& img_capturer):
-cam(img_capturer){
-
+visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic):
+nh(nh){
+    cam_ptr.reset(new visual_servo::ImageCapturer(nh, img_topic));
+    image = cam_ptr->getCurrentImage();
+    tool_center.x = -1.0;
+    tool_center.y = -1.0;
+    corner1.x = -1.0;
+    corner1.y = -1.0;
+    corner2.x = -1.0;
+    corner2.y = -1.0;
 }
 
 cv::Mat visual_servo::ToolDetector::getSourceImage(){
@@ -15,21 +22,24 @@ cv::Point visual_servo::ToolDetector::getToolCenter(){
 
 void visual_servo::ToolDetector::detect(){
     // update source image
-    image = cam.getCurrentImage();
-    cv::Mat img = getSourceImage();
+    image = cam_ptr->getCurrentImage();
+    std::cout << "Width : " << image.size().width << std::endl;
+    std::cout << "Height: " << image.size().height << std::endl;
     // perform detection
     cv::Mat hsv, mask, col_sum, row_sum;
     // convert to hsv colorspace
-    cv::cvtColor(img, hsv, cv::COLOR_BGR2HSV);
+    cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+    std::cout << "HSV converted!" << std::endl;
     // find the red color within the boundaries
-    cv::inRange(hsv, cv::Scalar(160, 50, 50), cv::Scalar(180, 255, 255), mask);
-    // // define kernel size  
-    // kernel = np.ones((15,15),np.uint8)
-    // // Remove unnecessary noise from mask
-    // mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    // mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-    cv::reduce(mask, col_sum, 0, cv::REDUCE_SUM, -1); 
-    cv::reduce(mask, row_sum, 1, cv::REDUCE_SUM, -1); 
+    cv::inRange(hsv, cv::Scalar(0, 100, 100), cv::Scalar(5, 255, 255), mask);
+
+    // cv::namedWindow("mask");
+    // cv::imshow("mask", mask);
+    // cv::waitKey(0);
+    // cv::destroyAllWindows();
+
+    cv::reduce(mask, col_sum, 0, cv::REDUCE_SUM, CV_64FC1); 
+    cv::reduce(mask, row_sum, 1, cv::REDUCE_SUM, CV_64FC1); 
     int start1, end1, start2, end2;
     for (int i=0; i<col_sum.size[1]; ++i){
         if (col_sum.at<double>(0,i)!=0){
@@ -59,15 +69,20 @@ void visual_servo::ToolDetector::detect(){
     tool_center.x = (start1+end1)/2.0;
     tool_center.y = (start2+end2)/2.0;
     corner1.x = start1;
-    corner1.y = start2;
+    corner1.y = end2;
     corner2.x = end1;
-    corner2.y = end2;
+    corner2.y = start2;
+
+    while(nh.ok()){
+        ros::spinOnce();
+        break;
+    }
 }
 
 void visual_servo::ToolDetector::drawDetectRes(){
-    cv::Mat img = getSourceImage();
+    cv::Mat img = image.clone();
     cv::rectangle(img, corner1, corner2, cv::Scalar(0, 0, 0), 1, cv::LINE_8);
-    cv::circle(img, tool_center, 3, cv::Scalar(0, 0, 255), -1);
+    cv::circle(img, tool_center, 3, cv::Scalar(255, 0, 0), -1);
     cv::namedWindow("Detection_Result");
     cv::imshow("Detection_Result", img);
     cv::waitKey(0);
