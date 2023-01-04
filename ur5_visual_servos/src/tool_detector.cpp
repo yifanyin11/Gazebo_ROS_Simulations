@@ -1,9 +1,8 @@
 #include "tool_detector.hpp"
 
-visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic):
+visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic, visual_servo::ImageCapturer& cam):
 nh(nh){
-    cam_ptr.reset(new visual_servo::ImageCapturer(nh, img_topic));
-    image = cam_ptr->getCurrentImage();
+    image = cam.getCurrentImage();
     tool_center.x = -1.0;
     tool_center.y = -1.0;
     corner1.x = -1.0;
@@ -12,17 +11,17 @@ nh(nh){
     corner2.y = -1.0;
 }
 
-cv::Mat visual_servo::ToolDetector::getSourceImage(){
-    return image;
+cv::Mat visual_servo::ToolDetector::getSourceImage(visual_servo::ImageCapturer& cam){
+    return cam.getCurrentImage();
 }
 
 cv::Point visual_servo::ToolDetector::getToolCenter(){
     return tool_center;
 }
 
-void visual_servo::ToolDetector::detect(){
+void visual_servo::ToolDetector::detect(visual_servo::ImageCapturer& cam){
     // update source image
-    image = cam_ptr->getCurrentImage();
+    image = cam.getCurrentImage();
     std::cout << "Width : " << image.size().width << std::endl;
     std::cout << "Height: " << image.size().height << std::endl;
     // perform detection

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /MotionPlanning1/Planned Path1
         - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 276
   - Class: rviz/Help
@@ -108,7 +109,17 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          frame_tool_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           gripper_indicator_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          needle_tool_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -219,7 +230,7 @@ Visualization Manager:
         Goal State Color: 250; 128; 0
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
-        Planning Group: gripper
+        Planning Group: ur5_arm
         Query Goal State: true
         Query Start State: false
         Show Workspace: false
@@ -279,7 +290,17 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          frame_tool_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           gripper_indicator_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          needle_tool_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -393,7 +414,11 @@ Visualization Manager:
           Value: false
         forearm_link:
           Value: false
+        frame_tool_link:
+          Value: false
         gripper_indicator_link:
+          Value: false
+        needle_tool_link:
           Value: false
         robotiq_85_base_link:
           Value: false
@@ -453,7 +478,11 @@ Visualization Manager:
                             tool0:
                               robotiq_coupler:
                                 robotiq_85_base_link:
+                                  frame_tool_link:
+                                    {}
                                   gripper_indicator_link:
+                                    {}
+                                  needle_tool_link:
                                     {}
                                   robotiq_85_left_inner_knuckle_link:
                                     robotiq_85_left_finger_tip_link:
@@ -535,7 +564,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003a300000664fc0200000008fb000000100044006900730070006c006100790073010000006e000001820000018200fffffffb0000000800480065006c00700000000342000000bb000000d400fffffffb0000000a00560069006500770073000000010c000000a40000013200fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000002600000026fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001fc000002b8000002b800fffffffb0000000a0049006d00610067006501000004c0000002120000002600ffffff000007c10000066400000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000003a300000664fc0200000008fb000000100044006900730070006c006100790073010000006e000001820000018200fffffffb0000000800480065006c00700000000342000000bb000000d400fffffffb0000000a00560069006500770073000000010c000000a40000013200fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000002600000026fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001fc000002c9000002b800fffffffb0000000a0049006d00610067006501000004d1000002010000002600ffffff000007c10000066400000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 2928

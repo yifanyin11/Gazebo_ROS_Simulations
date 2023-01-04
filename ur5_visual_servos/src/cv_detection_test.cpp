@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include "image_capturer.cpp"
@@ -15,11 +16,11 @@ int main(int argc, char** argv){
     std::string img_topic = "/visual_servo/camera1/image_raw_1";
 
     // detection setups
-    // visual_servo::ImageCapturer cam(nh, img_topic);
-    visual_servo::ToolDetector detector(nh, img_topic);
+    visual_servo::ImageCapturer cam(nh, img_topic);
+    visual_servo::ToolDetector detector(nh, img_topic, cam);
 
     while(nh.ok()){
-        detector.detect();
+        detector.detect(cam);
         detector.drawDetectRes();
         rate.sleep();
     }

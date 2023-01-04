@@ -38,6 +38,7 @@ cv::Mat visual_servo::ImageCapturer::getCurrentImage(){
         cv::destroyAllWindows();
         return (img_ptr->image).clone();
     }
+    return (img_ptr->image).clone();
 }
 
 void visual_servo::ImageCapturer::saveCurrentImage(std::string imgPath, std::string imgName){

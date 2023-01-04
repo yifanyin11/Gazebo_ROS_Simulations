@@ -35,8 +35,8 @@ int main(int argc, char** argv)
 
     moveit::planning_interface::MoveGroupInterface::Plan my_plan_arm;
 
-    move_group_interface_arm.setMaxVelocityScalingFactor(0.03);
-    move_group_interface_arm.setMaxAccelerationScalingFactor(0.1);
+    move_group_interface_arm.setMaxVelocityScalingFactor(0.3);
+    move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
     
     // 1. Move to home position
     move_group_interface_arm.setJointValueTarget(move_group_interface_arm.getNamedTargetValues("home"));
@@ -69,8 +69,6 @@ int main(int argc, char** argv)
 
     std::cout << "Start sleeping for 1.0 second ..." << std::endl;
 
-    ros::Duration(1.0).sleep();
-
     std::cout << "Done sleeping; check TCP position" << std::endl;
     std::cout << "Ready to move to target 2" << std::endl;
 
@@ -83,10 +81,6 @@ int main(int argc, char** argv)
     ROS_INFO_NAMED("pick_and_place", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
 
     move_group_interface_arm.asyncMove();
-
-    std::cout << "Start sleeping for 0.5 second ..." << std::endl;
-
-    ros::Duration(0.5).sleep();
 
     std::cout << "Done sleeping; check TCP position" << std::endl;
     std::cout << "Ready to move to target 3" << std::endl;

@@ -6,25 +6,19 @@
 #include <std_msgs/Bool.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
-#include <sanaria_msgs/VisualServoJointIncrement.h>
-#include <sanaria_msgs/VisualServoPositions.h>
-#include <sanaria_msgs/VisualServoGoal.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-#include <sanaria_calibration_tools/image_Jacobian_calculation.h>
-
+#include <string>
 #include <iostream>
 #include <sstream>
-#include <new>
-#include <thread>
 #include <vector>
-#include <chrono>
 #include <numeric>
-#include <map>
 #include <Eigen/Dense>
+
+#include "tool_detector.hpp"
 
 namespace visual_servo{
     class VisualServoController{
@@ -36,20 +30,19 @@ namespace visual_servo{
             int dof;
             double tolerance;
             double K;
-            bool continueLoop;
+            // bool continueLoop;
             int update_pix_step;
             int update_enc_step;
             int servoMaxStep;
-            int initStep;
 
             // flags
             bool targetReceived;
             bool JChecked;
+            bool continueLoop;
 
-            Eigen::VectorXd tipPosition;
+            Eigen::VectorXd toolPosition;
             Eigen::VectorXd robotPosition;
-            Eigen::VectorXd lastTipPos;
-            Eigen::VectorXd lastRobotPos;
+
             Eigen::VectorXd targets;
             Eigen::MatrixXd J;
             Eigen::VectorXd controlError;
@@ -57,14 +50,8 @@ namespace visual_servo{
             std::vector<double> J_flat;
 
             // ros subscribers
-            // ros::Subscriber encoder_subscriber;
-            ros::Subscriber target_subscriber;
-            ros::Subscriber tipPosition_subscriber;
-            ros::Subscriber Jacobian_subscriber;
-
-            // ros publishers
-            ros::Publisher stopSignal_publisher;
-            ros::Publisher direction_publisher;
+            ros::Subscriber target_sub;
+            ros::Subscriber J_sub;
 
         public:
             // constructors
@@ -75,7 +62,6 @@ namespace visual_servo{
             ~VisualServoController(){};
             // callbacks
             void JacobianCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
-            // void encoderCallback(const sensor_msgs::JointState::ConstPtr& msg);
             void targetCallback(const sanaria_msgs::VisualServoGoal::ConstPtr& msg);
             void controlInputsCallback(const sanaria_msgs::VisualServoPositions::ConstPtr& msg);
             // mutators
@@ -86,11 +72,9 @@ namespace visual_servo{
             void setFreq(int f);
             // accessors
             bool stopSign();
-            Eigen::VectorXd getTipPosition();
-            // member functions
-            void mainLoop();
-            void directionIncrement(Eigen::VectorXd& inc);
-            void directionIncrementOverhead(Eigen::VectorXd& inc);
+            Eigen::VectorXd getToolPosition();
+            // member functions 
+            void directionIncrement(Eigen::VectorXd& inc, ToolDetector& detector);
             // utils
             void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
             void limtVec(Eigen::VectorXd& v, int stepSize);

@@ -18,6 +18,8 @@ namespace visual_servo{
         ros::Subscriber img_sub;
         std::string image_topic;
     public:
+        friend class ToolDetector; 
+
         int count;
         // constructors
         ImageCapturer(const ImageCapturer& obj) = default;
