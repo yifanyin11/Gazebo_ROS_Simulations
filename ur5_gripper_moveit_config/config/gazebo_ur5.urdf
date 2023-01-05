@@ -533,7 +533,7 @@
         </inertial>
     </link>
     <!-- Add the gripper indicator -->
-    <joint name="gripper_indicator_joint" type="fixed">
+    <!-- <joint name="gripper_indicator_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="gripper_indicator_link" />
         <origin rpy="0 0 0" xyz="0 0 0" />
@@ -550,7 +550,7 @@
 
     <gazebo reference="gripper_indicator_link">
         <material>Gazebo/Red</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Add the needle/ screw -->
     <joint name="needle_tool_joint" type="fixed">
@@ -569,6 +569,26 @@
     </link>
 
     <gazebo reference="needle_tool_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+    <!-- Add the needle/ screw tip -->
+    <joint name="needle_tip_joint" type="fixed">
+        <parent link="robotiq_85_base_link" />
+        <child link="needle_tip_link" />
+        <origin rpy="0 1.57 0" xyz="0.21 0 0" />
+    </joint>
+
+    <link name="needle_tip_link">
+        <visual>
+            <geometry>
+              <sphere radius="0.01"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <gazebo reference="needle_tip_link">
         <material>Gazebo/Yellow</material>
     </gazebo>
 
@@ -589,7 +609,7 @@
     </link>
 
     <gazebo reference="frame_tool_link">
-        <material>Gazebo/Yellow</material>
+        <material>Gazebo/White</material>
     </gazebo>
 
     <!-- Gripper fingers - no visual version -->

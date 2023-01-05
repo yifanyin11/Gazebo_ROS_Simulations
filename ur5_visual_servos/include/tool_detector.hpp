@@ -18,18 +18,20 @@ namespace visual_servo{
         cv::Point tool_center;
         cv::Point corner1;
         cv::Point corner2;
+        cv::Scalar lower_hsv;
+        cv::Scalar upper_hsv;
 
     public:
         friend class JacobianUpdater; 
         friend class VisualServoController; 
         // constructor
-        ToolDetector(ros::NodeHandle& nh, std::string& img_topic, ImageCapturer& cam);
+        ToolDetector(ros::NodeHandle& nh, std::string& img_topic, std::vector<int> hsv_range);
         // destructor
         ~ToolDetector(){};
         // mutators
         // accessors
         cv::Mat getSourceImage(ImageCapturer& cam);
-        cv::Point getToolCenter();
+        cv::Point getCenter();
         // functions
         void detect(ImageCapturer& cam); // update source image with the cur frame from cam, perform detection using that image, update tool_center
         void drawDetectRes(); 

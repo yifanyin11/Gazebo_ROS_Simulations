@@ -1,21 +1,25 @@
 #include "tool_detector.hpp"
 
-visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic, visual_servo::ImageCapturer& cam):
+visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic, std::vector<int> hsv_range):
 nh(nh){
-    image = cam.getCurrentImage();
     tool_center.x = -1.0;
     tool_center.y = -1.0;
     corner1.x = -1.0;
     corner1.y = -1.0;
     corner2.x = -1.0;
     corner2.y = -1.0;
+    lower_hsv = cv::Scalar(hsv_range[0], hsv_range[1], hsv_range[2]);
+    upper_hsv = cv::Scalar(hsv_range[3], hsv_range[4], hsv_range[5]);
 }
 
 cv::Mat visual_servo::ToolDetector::getSourceImage(visual_servo::ImageCapturer& cam){
+    if (cam.img_ptr->image.empty()){
+        ROS_ERROR("No detection recorded yet.");
+    }
     return cam.getCurrentImage();
 }
 
-cv::Point visual_servo::ToolDetector::getToolCenter(){
+cv::Point visual_servo::ToolDetector::getCenter(){
     return tool_center;
 }
 
@@ -30,7 +34,7 @@ void visual_servo::ToolDetector::detect(visual_servo::ImageCapturer& cam){
     cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
     std::cout << "HSV converted!" << std::endl;
     // find the red color within the boundaries
-    cv::inRange(hsv, cv::Scalar(0, 100, 100), cv::Scalar(5, 255, 255), mask);
+    cv::inRange(hsv, lower_hsv, upper_hsv, mask);
 
     // cv::namedWindow("mask");
     // cv::imshow("mask", mask);

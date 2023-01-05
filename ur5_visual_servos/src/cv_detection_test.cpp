@@ -17,11 +17,12 @@ int main(int argc, char** argv){
 
     // detection setups
     visual_servo::ImageCapturer cam(nh, img_topic);
-    visual_servo::ToolDetector detector(nh, img_topic, cam);
+    visual_servo::ToolDetector detector(nh, img_topic, std::vector<int>{0, 100, 100, 5, 255, 255});
+    visual_servo::ToolDetector detector_tip(nh, img_topic, std::vector<int>{20, 100, 100, 30, 255, 255});
 
     while(nh.ok()){
-        detector.detect(cam);
-        detector.drawDetectRes();
+        detector_tip.detect(cam);
+        detector_tip.drawDetectRes();
         rate.sleep();
     }
 

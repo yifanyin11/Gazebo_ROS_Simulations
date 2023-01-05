@@ -6,21 +6,18 @@ nh(nh){
     ros::Rate rate(10);
     
     // initializations
-    J_topic = "/visual_servo/tooltip_positions";
+    J_topic = "/visual_servo/image_Jacobian";
     dof_robot = 3;
     num_features = 4;
 
-    update_pix_step = 100;
-    update_enc_step = 5000;
-    servoMaxStep = 100;
-    initStep = 1000;
+    update_pix_step = 50;
+    update_enc_step = 0.5;
+    servoMaxStep = 0.01;
+    initStep = 0.05;
 
-    toolPosReceived = false;
-    encReceived = false;
-
-    toolPosition.resize(num_features);
+    toolPos.resize(num_features);
     lastToolPos.resize(num_features);
-    robotPosition.resize(dof_robot);
+    robotPos.resize(dof_robot);
     lastRobotPos.resize(dof_robot);
     J.resize(num_features, dof_robot);
     J_flat.resize(dof_robot*num_features);
@@ -29,7 +26,7 @@ nh(nh){
     J_pub = nh.advertise<std_msgs::Float64MultiArray>(J_topic, 1);
 }
 
-static void visual_servo::JacobianUpdater::evalCostFunction(const double *params, int num_inputs, const void *inputs, double *fvec, int *info)
+void visual_servo::JacobianUpdater::evalCostFunction(const double *params, int num_inputs, const void *inputs, double *fvec, int *info)
 {
     const OptimData* optim_data = reinterpret_cast<const OptimData*>(inputs);
     Eigen::MatrixXd J_cur;
@@ -53,7 +50,7 @@ static void visual_servo::JacobianUpdater::evalCostFunction(const double *params
 
 }
 
-static bool visual_servo::JacobianUpdater::runLM(const OptimData& optim_data, const std::vector<double>& initial_state, std::vector<double>& result)
+bool visual_servo::JacobianUpdater::runLM(const OptimData& optim_data, const std::vector<double>& initial_state, std::vector<double>& result)
 {
     const size_t dof = initial_state.size();
     const size_t m = optim_data.getM();
@@ -136,7 +133,7 @@ static bool visual_servo::JacobianUpdater::runLM(const OptimData& optim_data, co
     return true;
 }
 
-int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, visual_servo::ToolDetector& detector, int initStep=0.05){
+void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, visual_servo::ToolDetector& detector){
     // Ros setups
     ros::AsyncSpinner spinner(1);
     spinner.start();
@@ -154,7 +151,9 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     bool success;
 
     // define points
-    cv::Point tool_center, tool_dxl, tool_dyl, tool_dzl, tool_dxr, tool_dyr, tool_dzr;
+    cv::Point tool_center; 
+    cv::Point tool_dxl1, tool_dyl1, tool_dzl1, tool_dxr1, tool_dyr1, tool_dzr1;
+    cv::Point tool_dxl2, tool_dyl2, tool_dzl2, tool_dxr2, tool_dyr2, tool_dzr2;
     // get current pose
     geometry_msgs::PoseStamped current_pose;
     current_pose = move_group_interface_arm.getCurrentPose("ee_link");
@@ -170,8 +169,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at x-
-    detector.detect(cam);
-    tool_dxl = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dxl1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dxl2 = detector.getCenter();
 
     // move to x+
     target_pose.position.x = target_pose.position.x+2*initStep;
@@ -181,8 +182,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at x+
-    detector.detect(cam);
-    tool_dxr = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dxr1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dxr2 = detector.getCenter();
     
     // move to y-
     target_pose.position.x = target_pose.position.x-initStep;
@@ -193,8 +196,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at y-
-    detector.detect(cam);
-    tool_dyl = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dyl1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dyl2 = detector.getCenter();
 
     // move to y+
     target_pose.position.y = target_pose.position.y+2*initStep;
@@ -204,8 +209,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at x+
-    detector.detect(cam);
-    tool_dyr = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dyr1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dyr2 = detector.getCenter();
 
     // move to z-
     target_pose.position.y = target_pose.position.y-initStep;
@@ -216,8 +223,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at z-
-    detector.detect(cam);
-    tool_dzl = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dzl1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dzl2 = detector.getCenter();
 
     // move to z+
     target_pose.position.z = target_pose.position.z+2*initStep;
@@ -227,8 +236,10 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // detect tool image position at z+
-    detector.detect(cam);
-    tool_dzr = detector.getToolCenter();
+    detector.detect(cam1);
+    tool_dzr1 = detector.getCenter();
+    detector.detect(cam2);
+    tool_dzr2 = detector.getCenter();
 
     // go back to center
     target_pose.position.z = target_pose.position.z-initStep;
@@ -238,23 +249,35 @@ int visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapture
     move_group_interface_arm.move();
 
     // calculate J
-    du1overdx = (tool_dxr-tool_dxl)/dx;
-    du1overdy = (tool_dyr-center_overhead[0])/dy;
-    du1overdz = (posz_overhead[0]-center_overhead[0])/dz;
-    dv1overdx = (posx_overhead[1]-center_overhead[1])/dx;
-    dv1overdy = (posy_overhead[1]-center_overhead[1])/dy;
-    dv1overdz = (posz_overhead[1]-center_overhead[1])/dz;
+    double du1overdx = (tool_dxr1.x-tool_dxl1.x)/(2*initStep);
+    double du1overdy = (tool_dyr1.x-tool_dyl1.x)/(2*initStep);
+    double du1overdz = (tool_dzr1.x-tool_dzl1.x)/(2*initStep);
+    double dv1overdx = (tool_dxr1.y-tool_dxl1.y)/(2*initStep);
+    double dv1overdy = (tool_dyr1.y-tool_dyl1.y)/(2*initStep);
+    double dv1overdz = (tool_dzr1.y-tool_dzl1.y)/(2*initStep);
 
-    du2overdx = (posx_sideview[0]-center_sideview[0])/dx;
-    du2overdy = (posy_sideview[0]-center_sideview[0])/dy;
-    du2overdz = (posz_sideview[0]-center_sideview[0])/dz;
-    dv2overdx = (posx_sideview[1]-center_sideview[1])/dx;
-    dv2overdy = (posy_sideview[1]-center_sideview[1])/dy;
-    dv2overdz = (posz_sideview[1]-center_sideview[1])/dz;
+    double du2overdx = (tool_dxr2.x-tool_dxl2.x)/(2*initStep);
+    double du2overdy = (tool_dyr2.x-tool_dyl2.x)/(2*initStep);
+    double du2overdz = (tool_dzr2.x-tool_dzl2.x)/(2*initStep);
+    double dv2overdx = (tool_dxr2.y-tool_dxl2.y)/(2*initStep);
+    double dv2overdy = (tool_dyr2.y-tool_dyl2.y)/(2*initStep);
+    double dv2overdz = (tool_dzr2.y-tool_dzl2.y)/(2*initStep);
 
-    J = [du1overdx, du1overdy, du1overdz, dv1overdx, dv1overdy, dv1overdz, du2overdx, du2overdy, du2overdz, dv2overdx, dv2overdy, dv2overdz];
+    J_flat.push_back(du1overdx);
+    J_flat.push_back(du1overdy);
+    J_flat.push_back(du1overdz);
+    J_flat.push_back(dv1overdx);
+    J_flat.push_back(dv1overdy);
+    J_flat.push_back(dv1overdz);
+    J_flat.push_back(du2overdx);
+    J_flat.push_back(du2overdy);
+    J_flat.push_back(du2overdz);
+    J_flat.push_back(dv2overdx);
+    J_flat.push_back(dv2overdy);
+    J_flat.push_back(dv2overdz);
 
-    return 0;
+    visual_servo::JacobianUpdater::flat2eigen(J, J_flat);
+
 }
 
 void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eigen::VectorXd& del_r){
@@ -268,51 +291,79 @@ void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eige
     flat2eigen(J, result);
 }
 
-void visual_servo::JacobianUpdater::mainLoop(visual_servo::ToolDetector& detector){
-
-    if (initializeJacobian(nh)==-1){
-        return -1;
-    }
+void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, visual_servo::ToolDetector& detector){
+    ros::Rate rate(100.0);
+    initializeJacobian(cam1, cam2, detector);
 
     std_msgs::Float64MultiArray Jmsg;
+    cv::Point toolPos1, toolPos2;
 
     ROS_INFO("Jacobian initialized! Ready for Jacobian update.");
+    // loopup current robot pose
+    while (nh.ok()){
+        try{
+            listener.lookupTransform("/world", "/ee_link",  ros::Time(0), transform);
+            detector.detect(cam1);
+            toolPos1 = detector.getCenter();
+            detector.detect(cam2);
+            toolPos2 = detector.getCenter();
+            break;
+            }
+        catch (tf::TransformException ex){
+            // ROS_ERROR("%s",ex.what());
+            rate.sleep();
+            }   
+    }
+    
+    lastToolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
+    lastRobotPos << transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z();
 
-    Eigen::VectorXd robotPos;
-    Eigen::VectorXd toolPos;
     Eigen::VectorXd encDisplFromLast;
     Eigen::VectorXd pixDisplFromLast;
 
     while ((nh.ok())){
+        while (nh.ok()){
+            try{
+                //*** TODO ***
+                // overload detect to detect a given image, and only capture images in this loop
+                listener.lookupTransform("/world", "/ee_link",  ros::Time(0), transform);
+                detector.detect(cam1);
+                toolPos1 = detector.getCenter();
+                detector.detect(cam2);
+                toolPos2 = detector.getCenter();
+                break;
+                }
+            catch (tf::TransformException ex){
+                // ROS_ERROR("%s",ex.what());
+                rate.sleep();
+                }   
+        }
         
-        if (encReceived){
-            robotPos = robotPosition;
-            encDisplFromLast = robotPos-lastRobotPos;
-            std::cout << "robotPosition: " << robotPosition <<std::endl;
-            std::cout << "encDisFromLast: " << encDisplFromLast << std::endl;
-        }
-        if (toolPosReceived){
-            toolPos = toolPosition;
-            pixDisplFromLast = toolPos-lastToolPos;
-            std::cout << "toolPosition: " << toolPos << std::endl;
-            std::cout << "pixelDisFromLast: " << pixDisplFromLast << std::endl;
-        }
+        toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
+        robotPos << transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z();
+
+        encDisplFromLast = robotPos-lastRobotPos;
+        std::cout << "robotPosition: " << robotPos <<std::endl;
+        std::cout << "encDisFromLast: " << encDisplFromLast << std::endl;
+
+        pixDisplFromLast = toolPos-lastToolPos;
+        std::cout << "toolPosition: " << toolPos << std::endl;
+        std::cout << "pixelDisFromLast: " << pixDisplFromLast << std::endl;
 
         std::cout << "J: " << J << std::endl;
         
         // update J only if greater than a distance from the last update
-        if (encReceived && toolPosReceived && pixDisplFromLast.norm()>= update_pix_step && encDisplFromLast.norm()>= update_enc_step){
+        if (pixDisplFromLast.norm()>= update_pix_step && encDisplFromLast.norm()>= update_enc_step){
             updateJacobian(pixDisplFromLast, encDisplFromLast);
             lastToolPos = toolPos;
             lastRobotPos = robotPos;
         } 
 
         Jmsg.data = J_flat;
-        Jacobian_publisher.publish(Jmsg);
+        J_pub.publish(Jmsg);
         ros::spinOnce();
         rate.sleep();
     }
-
 }
 
 

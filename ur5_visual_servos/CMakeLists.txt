@@ -117,6 +117,7 @@ catkin_package(
 include_directories(
   SYSTEM 
   include
+  src/lm
   ${catkin_INCLUDE_DIRS} 
   ${Boost_INCLUDE_DIR} 
   ${EIGEN3_INCLUDE_DIRS}
@@ -129,6 +130,13 @@ target_link_libraries(image_capturer ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${Op
 
 add_library(tool_detector src/tool_detector.cpp)
 target_link_libraries(tool_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
+add_library(Jacobian_updater src/Jacobian_updater.cpp)
+target_link_libraries(Jacobian_updater ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
+add_library(visual_servo_controller src/visual_servo_controller.cpp)
+target_link_libraries(visual_servo_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/ur5_visual_servos.cpp
 # )

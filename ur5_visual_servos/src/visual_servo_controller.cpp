@@ -5,7 +5,8 @@
 // ####################
 
 // constructors
-visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, double& tol) :
+visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, double& tol, bool target_topic=false) :
+
     nh(nh), tolerance(tol){
 
     // ros::AsyncSpinner spinner(4); // Use 4 threads
@@ -13,21 +14,24 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     dof = 3;
     num_features = 4;
     freq = 100;
-    servoMaxStep = 100;
+    servoMaxStep = 0.01;
     K = 0.03;
+    constJTh = 20;
+
     JChecked = false;
     continueLoop = true;
     targetReceived = false;
     // configure subscribers
     J_sub = nh.subscribe("/visual_servo/Jacobian", 1, &VisualServoController::JacobianCallback, this);
-    target_sub = nh.subscribe("/visual_servo/goal", 100, &VisualServoController::targetCallback, this);
+    if (target_topic){
+        target_sub = nh.subscribe("/visual_servo/goal", 100, &VisualServoController::targetCallback, this);
+    }
     // containers initialization
     targets.resize(num_features);
-    toolPosition.resize(num_features);
-    robotPosition.resize(dof);
+    toolPos.resize(num_features);
     J.resize(num_features, dof);
     controlError.resize(num_features);
-    controlError.setZero();
+    controlError(0)=DBL_MAX; // set norm of control error to max
 }
 
 visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, double& tol, Eigen::VectorXd& targets) :
@@ -38,53 +42,38 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     dof = 3;
     num_features = 4;
     freq = 100;
-    servoMaxStep = 100;
+    servoMaxStep = 0.01;
     K = 0.03;
+    constJTh = 20;
+
     JChecked = false;
     continueLoop = true;
     targetReceived = true;
     // configure subscribers
     J_sub = nh.subscribe("/visual_servo/Jacobian", 1, &VisualServoController::JacobianCallback, this);
-    toolPos_sub = nh.subscribe("/visual_servo/tool_positions", 1, &VisualServoController::controlInputsCallback, this);
     // containers initialization
-    targets.resize(num_features);
-    toolPosition.resize(num_features);
-    robotPosition.resize(dof);
+    toolPos.resize(num_features);
     J.resize(num_features, dof);
     controlError.resize(num_features);
-    controlError.setZero();
+    controlError(0)=DBL_MAX; // set norm of control error to max
 }
 
 void visual_servo::VisualServoController::JacobianCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
-    J_flat = msg->data;
-    flat2eigen(J, J_flat);
+    // not updating J when control error is small
+    if (controlError.norm()>constJTh){
+        J_flat = msg->data;
+        flat2eigen(J, J_flat);
+    }
     if (!JChecked){
-        dof = J.cols();
-        num_features = J.rows();
         JChecked = true;
     }
 }
 
-void visual_servo::VisualServoController::targetCallback(const VisualServoGoal::ConstPtr& msg){
+void visual_servo::VisualServoController::targetCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
     if (!targetReceived){
         targetReceived = true;
-        targets << msg->camera1_x, msg->camera1_y, msg->camera2_x, msg->camera2_y;
     } 
-}
-
-void visual_servo::VisualServoController::controlInputsCallback(const VisualServoPositions::ConstPtr& msg){
-    std_msgs::Bool stopmsg;
-    if (msg->camera1_x>0 && msg->camera2_x>0){
-        tipPosition << msg->camera1_x, msg->camera1_y, msg->camera2_x, msg->camera2_y;
-        robotPosition << msg->encoder_x, msg->encoder_y, msg->encoder_z;
-
-        if (controlError.isZero(0) || controlError.norm()>tolerance){
-            continueLoop = true;
-        }
-        else{
-            continueLoop = false;
-        }
-    }
+    targets << msg->data[0], msg->data[1], msg->data[2], msg->data[3];
 }
 
 void visual_servo::VisualServoController::setServoMaxStep(int step){
@@ -112,12 +101,20 @@ bool visual_servo::VisualServoController::stopSign(){
 }
 
 Eigen::VectorXd visual_servo::VisualServoController::getToolPosition(){
-    return tipPosition;
+    return toolPos;
 }
 
 // update member variables
-void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& increment, visual_servo::ToolDetector& detector){
+void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
+visual_servo::ToolDetector& detector){
+
     ros::Rate loopRate(freq);
+
+    while(nh.ok()){
+        ros::spinOnce();
+        break;
+    }
+
     if (!targetReceived){
         ROS_INFO("Waiting for servo target ------");
         while((nh.ok()) && !targetReceived){
@@ -128,10 +125,6 @@ void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& in
     if (targets.size()!=num_features){
         ROS_ERROR("Target vector size inconsistent! Should match: %d", num_features);
     }
-    if (tipPosition.size()!=num_features){
-        ROS_ERROR("Tip position size inconsistent! Should match: %d", num_features);
-    }
-
     if (!JChecked){
         ROS_INFO("Waiting for Jacobian being initialized ------");
         while((nh.ok()) && !JChecked){
@@ -140,12 +133,17 @@ void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& in
         ROS_INFO("Jacobian received!");
     }
 
-    Eigen::VectorXd tipPos = tipPosition;
-    controlError = targets-tipPos;
-    Eigen::VectorXd robotPos = robotPosition;
+    detector.detect(cam1);
+    cv::Point toolPos1 = detector.getCenter();
+    detector.detect(cam2);
+    cv::Point toolPos2 = detector.getCenter();
+
+    toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
+
+    controlError = targets-toolPos;
     
     std::cout << "target: " << targets << std::endl;
-    std::cout << "tipPosition: " << tipPos << std::endl;
+    std::cout << "toolPos: " << toolPos << std::endl;
     std::cout << "control_error: " << controlError << std::endl;
 
     Eigen::VectorXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
@@ -159,6 +157,65 @@ void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& in
         ROS_INFO("Refining ---");
     }
 }
+
+void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
+std::vector<visual_servo::ToolDetector>& detector_list){
+
+    ros::Rate loopRate(freq);
+
+    while(nh.ok()){
+        ros::spinOnce();
+        break;
+    }
+
+    if (!targetReceived){
+        ROS_INFO("Waiting for servo target ------");
+        while((nh.ok()) && !targetReceived){
+            loopRate.sleep();
+        }
+        ROS_INFO("Servo target received!");
+    }
+
+    if (!JChecked){
+        ROS_INFO("Waiting for Jacobian being initialized ------");
+        while((nh.ok()) && !JChecked){
+            loopRate.sleep();
+        }
+        ROS_INFO("Jacobian received!");
+    }
+
+    detector_list[0].detect(cam1);
+    cv::Point toolPos1 = detector_list[0].getCenter();
+    detector_list[0].detect(cam2);
+    cv::Point toolPos2 = detector_list[0].getCenter();
+
+    toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
+
+    detector_list[1].detect(cam1);
+    cv::Point target1 = detector_list[0].getCenter();
+    detector_list[1].detect(cam2);
+    cv::Point target2 = detector_list[0].getCenter();
+
+    targets << target1.x, target1.y, target2.x, target2.y;
+
+    controlError = targets-toolPos;
+    
+    std::cout << "target: " << targets << std::endl;
+    std::cout << "toolPos: " << toolPos << std::endl;
+    std::cout << "control_error: " << controlError << std::endl;
+
+    Eigen::VectorXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
+    increment = K*J_pinv*controlError;
+    std::cout << "increment" << increment << std::endl;
+
+    if (increment.norm()>servoMaxStep*20){
+        limtVec(increment, servoMaxStep*50);
+    }
+    else{
+        ROS_INFO("Refining ---");
+    }
+}
+
 
 // #################
 // ##    Utils    ##

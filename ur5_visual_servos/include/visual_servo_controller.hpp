@@ -13,10 +13,14 @@
 
 #include <string>
 #include <iostream>
+#include <cfloat>
 #include <sstream>
 #include <vector>
 #include <numeric>
 #include <Eigen/Dense>
+
+#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 
 #include "tool_detector.hpp"
 
@@ -25,11 +29,13 @@ namespace visual_servo{
         protected:
 
             ros::NodeHandle nh;
+
             int freq;
             int num_features;
             int dof;
             double tolerance;
             double K;
+            double constJTh; // within which J remains a const (in pixs)
             // bool continueLoop;
             int update_pix_step;
             int update_enc_step;
@@ -40,8 +46,7 @@ namespace visual_servo{
             bool JChecked;
             bool continueLoop;
 
-            Eigen::VectorXd toolPosition;
-            Eigen::VectorXd robotPosition;
+            Eigen::VectorXd toolPos;
 
             Eigen::VectorXd targets;
             Eigen::MatrixXd J;
@@ -55,15 +60,15 @@ namespace visual_servo{
 
         public:
             // constructors
-            VisualServoController(ros::NodeHandle& nh, double& tol);
+            VisualServoController(ros::NodeHandle& nh, double& tol, bool target_topic);
             // constructor with a fixed target
             VisualServoController(ros::NodeHandle& nh, double& tol, Eigen::VectorXd& targets);
             // destructor
             ~VisualServoController(){};
             // callbacks
             void JacobianCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
-            void targetCallback(const sanaria_msgs::VisualServoGoal::ConstPtr& msg);
-            void controlInputsCallback(const sanaria_msgs::VisualServoPositions::ConstPtr& msg);
+            // optional
+            void targetCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
             // mutators
             void setServoMaxStep(int step);
             void setUpdatePixStep(int step);
@@ -74,7 +79,8 @@ namespace visual_servo{
             bool stopSign();
             Eigen::VectorXd getToolPosition();
             // member functions 
-            void directionIncrement(Eigen::VectorXd& inc, ToolDetector& detector);
+            void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
+            void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
             // utils
             void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
             void limtVec(Eigen::VectorXd& v, int stepSize);

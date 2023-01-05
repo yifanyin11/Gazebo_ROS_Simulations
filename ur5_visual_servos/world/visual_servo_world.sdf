@@ -739,6 +739,16 @@
           <wrench>0 0 -0.98 0 -0 0</wrench>
         </link>
       </model>
+      <model name='target'>
+        <pose>0.3 0.5 1.2 0 -0 1e-06</pose>
+        <scale>0.001 0.001 0.001</scale>
+        <link name='link'>
+          <pose>0.3 0.5 1.2 0 -0 1e-06</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
       <light name='sun'>
         <pose>0 0 10 0 -0 0</pose>
       </light>
@@ -750,6 +760,26 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
+    <model name='target'>
+      <pose>0.3 0.5 1.2 0 -0 1e-06</pose>
+      <static>1</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <sphere radius="0.01"/>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Red</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
     <model name='unit_box_blue'>
       <link name='link'>
         <inertial>

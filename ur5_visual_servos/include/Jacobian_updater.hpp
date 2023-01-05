@@ -22,8 +22,8 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 
-#include "lm/lmmin.h"
-#include "lm/lmmin.cpp"
+#include "lmmin.h"
+#include "lmmin.cpp"
 #include "tool_detector.hpp"
 
 namespace visual_servo{
@@ -40,6 +40,8 @@ namespace visual_servo{
     class JacobianUpdater{
     private:
         ros::NodeHandle nh;
+        tf::TransformListener listener;
+        tf::StampedTransform transform;
         std::string J_topic;
 
         int dof_robot;
@@ -50,12 +52,9 @@ namespace visual_servo{
         int servoMaxStep;
         int initStep;
 
-        bool toolPosReceived;
-        bool encReceived;
-
-        Eigen::VectorXd toolPosition;
+        Eigen::VectorXd toolPos;
         Eigen::VectorXd lastToolPos;
-        Eigen::VectorXd robotPosition;
+        Eigen::VectorXd robotPos;
         Eigen::VectorXd lastRobotPos;
         Eigen::MatrixXd J;
         std::vector<double> J_flat;
@@ -72,11 +71,11 @@ namespace visual_servo{
         static void evalCostFunction(const double *params, int num_inputs, const void *inputs, double *fvec, int *info);
         static bool runLM(const OptimData& optim_data, const std::vector<double>& initial_state, std::vector<double>& result);
         // initialization function
-        int initializeJacobian(ImageCapturer& cam, ToolDetector& detector, visual_servo::ToolDetector& detector, int initStep=0.05);
+        void initializeJacobian(ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
         // update funcion
         void updateJacobian(Eigen::VectorXd& del_Px, Eigen::VectorXd& del_x);
         // main loop
-        void mainLoop(ToolDetector& detector);
+        void mainLoop(ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
         // utils
         static void flat2eigen(Eigen::MatrixXd& M, const double* flat);
         static void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
