@@ -30,7 +30,7 @@ int main(int argc, char** argv){
             move_group_interface_arm.getCurrentState()->getJointModelGroup(PLANNING_GROUP_ARM);
     
     moveit::planning_interface::MoveGroupInterface::Plan my_plan_arm;
-    move_group_interface_arm.setMaxVelocityScalingFactor(0.3);
+    move_group_interface_arm.setMaxVelocityScalingFactor(0.05);
     move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
     bool success;
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv){
     target_pose.orientation = current_pose.pose.orientation;
     target_pose.position = current_pose.pose.position;
 
-    ros::Rate rate(100);
+    ros::Rate rate(10);
     // image topics
     std::string img_topic1 = "/visual_servo/camera1/image_raw_1";
     std::string img_topic2 = "/visual_servo/camera2/image_raw_2";
@@ -91,8 +91,9 @@ int main(int argc, char** argv){
 
         success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
         ROS_INFO_NAMED("visual_servo_position_test", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
-        move_group_interface_arm.asyncMove();
-        rate.sleep();
+        // move_group_interface_arm.asyncMove();
+        move_group_interface_arm.move();
+        // rate.sleep();
     }
 
 }

@@ -15,7 +15,7 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     num_features = 4;
     freq = 100;
     servoMaxStep = 0.2;
-    K = 0.03;
+    K = 0.3;
     constJTh = 20;
 
     JChecked = false;
@@ -43,7 +43,7 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     num_features = 4;
     freq = 100;
     servoMaxStep = 0.2;
-    K = 0.03;
+    K = 0.3;
     constJTh = 20;
 
     JChecked = false;
