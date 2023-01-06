@@ -48,9 +48,8 @@ namespace visual_servo{
         int num_features;
 
         int update_pix_step;
-        int update_enc_step;
-        int servoMaxStep;
-        int initStep;
+        double update_enc_step;
+        double initStep;
 
         Eigen::VectorXd toolPos;
         Eigen::VectorXd lastToolPos;

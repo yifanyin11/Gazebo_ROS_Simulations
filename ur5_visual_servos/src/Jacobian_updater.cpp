@@ -1,18 +1,15 @@
 #include "Jacobian_updater.hpp"
 
-visual_servo::JacobianUpdater::JacobianUpdater(ros::NodeHandle& nh, std::string& toolPos_topic):
+visual_servo::JacobianUpdater::JacobianUpdater(ros::NodeHandle& nh, std::string& J_topic_):
 nh(nh){
-    // ros initialization
-    ros::Rate rate(10);
     
     // initializations
-    J_topic = "/visual_servo/image_Jacobian";
+    J_topic = J_topic_;
     dof_robot = 3;
     num_features = 4;
 
     update_pix_step = 50;
-    update_enc_step = 0.5;
-    servoMaxStep = 0.01;
+    update_enc_step = 0.3;
     initStep = 0.05;
 
     toolPos.resize(num_features);
@@ -135,7 +132,7 @@ bool visual_servo::JacobianUpdater::runLM(const OptimData& optim_data, const std
 
 void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, visual_servo::ToolDetector& detector){
     // Ros setups
-    ros::AsyncSpinner spinner(1);
+    ros::AsyncSpinner spinner(4);
     spinner.start();
     
     // MOVEIT planning setups
@@ -150,6 +147,15 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
     bool success;
 
+    // Move to home position
+    move_group_interface_arm.setJointValueTarget(move_group_interface_arm.getNamedTargetValues("home"));
+    
+    success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
+
+    move_group_interface_arm.move();
+
     // define points
     cv::Point tool_center; 
     cv::Point tool_dxl1, tool_dyl1, tool_dzl1, tool_dxr1, tool_dyr1, tool_dzr1;
@@ -162,24 +168,29 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     target_pose.orientation = current_pose.pose.orientation;
     target_pose.position = current_pose.pose.position;
     // move to x-
-    target_pose.position.x = target_pose.position.x-initStep;
+    target_pose.position.x = current_pose.pose.position.x-initStep;
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to x- finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x-
     detector.detect(cam1);
     tool_dxl1 = detector.getCenter();
     detector.detect(cam2);
     tool_dxl2 = detector.getCenter();
-
     // move to x+
     target_pose.position.x = target_pose.position.x+2*initStep;
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to x+ finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x+
     detector.detect(cam1);
@@ -193,7 +204,10 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to y- finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at y-
     detector.detect(cam1);
@@ -206,7 +220,10 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to y+ finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x+
     detector.detect(cam1);
@@ -220,7 +237,10 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to z- finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at z-
     detector.detect(cam1);
@@ -233,7 +253,10 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+    std::cout << "move to z+ finished ..." << std::endl;
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at z+
     detector.detect(cam1);
@@ -246,7 +269,10 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setPoseTarget(target_pose);
 
     success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
+
+    ros::Duration(1.0).sleep();
 
     // calculate J
     double du1overdx = (tool_dxr1.x-tool_dxl1.x)/(2*initStep);
@@ -263,18 +289,18 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     double dv2overdy = (tool_dyr2.y-tool_dyl2.y)/(2*initStep);
     double dv2overdz = (tool_dzr2.y-tool_dzl2.y)/(2*initStep);
 
-    J_flat.push_back(du1overdx);
-    J_flat.push_back(du1overdy);
-    J_flat.push_back(du1overdz);
-    J_flat.push_back(dv1overdx);
-    J_flat.push_back(dv1overdy);
-    J_flat.push_back(dv1overdz);
-    J_flat.push_back(du2overdx);
-    J_flat.push_back(du2overdy);
-    J_flat.push_back(du2overdz);
-    J_flat.push_back(dv2overdx);
-    J_flat.push_back(dv2overdy);
-    J_flat.push_back(dv2overdz);
+    J_flat[0]=du1overdx;
+    J_flat[1]=du1overdy;
+    J_flat[2]=du1overdz;
+    J_flat[3]=dv1overdx;
+    J_flat[4]=dv1overdy;
+    J_flat[5]=dv1overdz;
+    J_flat[6]=du2overdx;
+    J_flat[7]=du2overdy;
+    J_flat[8]=du2overdz;
+    J_flat[9]=dv2overdx;
+    J_flat[10]=dv2overdy;
+    J_flat[11]=dv2overdz;
 
     visual_servo::JacobianUpdater::flat2eigen(J, J_flat);
 
@@ -292,7 +318,7 @@ void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eige
 }
 
 void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, visual_servo::ToolDetector& detector){
-    ros::Rate rate(100.0);
+    ros::Rate rate(10.0);
     initializeJacobian(cam1, cam2, detector);
 
     std_msgs::Float64MultiArray Jmsg;
@@ -311,7 +337,7 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
             }
         catch (tf::TransformException ex){
             // ROS_ERROR("%s",ex.what());
-            rate.sleep();
+            // rate.sleep();
             }   
     }
     
@@ -325,7 +351,7 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
         while (nh.ok()){
             try{
                 //*** TODO ***
-                // overload detect to detect a given image, and only capture images in this loop
+                // overload detect function to detect a given image, and only capture images in this loop
                 listener.lookupTransform("/world", "/ee_link",  ros::Time(0), transform);
                 detector.detect(cam1);
                 toolPos1 = detector.getCenter();
@@ -335,7 +361,6 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
                 }
             catch (tf::TransformException ex){
                 // ROS_ERROR("%s",ex.what());
-                rate.sleep();
                 }   
         }
         
@@ -353,7 +378,7 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
         std::cout << "J: " << J << std::endl;
         
         // update J only if greater than a distance from the last update
-        if (pixDisplFromLast.norm()>= update_pix_step && encDisplFromLast.norm()>= update_enc_step){
+        if (pixDisplFromLast.norm()>= update_pix_step || encDisplFromLast.norm()>= update_enc_step){
             updateJacobian(pixDisplFromLast, encDisplFromLast);
             lastToolPos = toolPos;
             lastRobotPos = robotPos;

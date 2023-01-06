@@ -20,7 +20,7 @@ namespace visual_servo{
     public:
         friend class ToolDetector; 
 
-        int count;
+        // int count;
         // constructors
         ImageCapturer(const ImageCapturer& obj) = default;
         ImageCapturer(ros::NodeHandle& nh, std::string& img_topic);

@@ -25,7 +25,7 @@ namespace visual_servo{
         friend class JacobianUpdater; 
         friend class VisualServoController; 
         // constructor
-        ToolDetector(ros::NodeHandle& nh, std::string& img_topic, std::vector<int> hsv_range);
+        ToolDetector(ros::NodeHandle& nh, std::vector<int> hsv_range);
         // destructor
         ~ToolDetector(){};
         // mutators

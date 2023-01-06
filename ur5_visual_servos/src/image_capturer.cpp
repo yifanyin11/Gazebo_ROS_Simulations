@@ -13,14 +13,14 @@ nh(nh), image_topic(img_topic){
 void visual_servo::ImageCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg){
     try{
             // for test only
-            count++;
-            std::cout << "count in callback: " << count << std::endl;
+            // count++;
+            // std::cout << "count in callback: " << count << std::endl;
 
             img_ptr = cv_bridge::toCvCopy(msg, "bgr8");
-            cv::namedWindow("raw");
-            cv::imshow("raw", img_ptr->image);
-            cv::waitKey(0);
-            cv::destroyAllWindows();
+            // cv::namedWindow("raw");
+            // cv::imshow("raw", img_ptr->image);
+            // cv::waitKey(0);
+            // cv::destroyAllWindows();
         }
     catch (cv_bridge::Exception& e){
             ROS_ERROR("Could not convert from '%s' to 'bgr8'.\n", msg->encoding.c_str());
@@ -31,11 +31,11 @@ cv::Mat visual_servo::ImageCapturer::getCurrentImage(){
     ros::Rate rate(100);
     while(nh.ok()){
         ros::spinOnce();
-        std::cout << "count outside callback: " << count << std::endl;
-        cv::namedWindow("get");
-        cv::imshow("get", img_ptr->image);
-        cv::waitKey(0);
-        cv::destroyAllWindows();
+        // std::cout << "count outside callback: " << count << std::endl;
+        // cv::namedWindow("get");
+        // cv::imshow("get", img_ptr->image);
+        // cv::waitKey(0);
+        // cv::destroyAllWindows();
         return (img_ptr->image).clone();
     }
     return (img_ptr->image).clone();

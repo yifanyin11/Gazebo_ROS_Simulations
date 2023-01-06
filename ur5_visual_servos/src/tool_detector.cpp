@@ -1,6 +1,6 @@
 #include "tool_detector.hpp"
 
-visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::string& img_topic, std::vector<int> hsv_range):
+visual_servo::ToolDetector::ToolDetector(ros::NodeHandle& nh, std::vector<int> hsv_range):
 nh(nh){
     tool_center.x = -1.0;
     tool_center.y = -1.0;
@@ -26,13 +26,13 @@ cv::Point visual_servo::ToolDetector::getCenter(){
 void visual_servo::ToolDetector::detect(visual_servo::ImageCapturer& cam){
     // update source image
     image = cam.getCurrentImage();
-    std::cout << "Width : " << image.size().width << std::endl;
-    std::cout << "Height: " << image.size().height << std::endl;
+    // std::cout << "Width : " << image.size().width << std::endl;
+    // std::cout << "Height: " << image.size().height << std::endl;
     // perform detection
     cv::Mat hsv, mask, col_sum, row_sum;
     // convert to hsv colorspace
     cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
-    std::cout << "HSV converted!" << std::endl;
+    // std::cout << "HSV converted!" << std::endl;
     // find the red color within the boundaries
     cv::inRange(hsv, lower_hsv, upper_hsv, mask);
 

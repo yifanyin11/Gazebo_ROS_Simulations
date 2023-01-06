@@ -37,9 +37,7 @@ namespace visual_servo{
             double K;
             double constJTh; // within which J remains a const (in pixs)
             // bool continueLoop;
-            int update_pix_step;
-            int update_enc_step;
-            int servoMaxStep;
+            double servoMaxStep;
 
             // flags
             bool targetReceived;
@@ -71,8 +69,6 @@ namespace visual_servo{
             void targetCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
             // mutators
             void setServoMaxStep(int step);
-            void setUpdatePixStep(int step);
-            void setUpdateEncStep(int step);
             void setK(double K_);
             void setFreq(int f);
             // accessors
@@ -83,7 +79,7 @@ namespace visual_servo{
             void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
             // utils
             void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
-            void limtVec(Eigen::VectorXd& v, int stepSize);
+            void limtVec(Eigen::VectorXd& v, double stepSize);
 
     };
 }

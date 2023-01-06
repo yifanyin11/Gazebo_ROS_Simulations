@@ -14,7 +14,7 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     dof = 3;
     num_features = 4;
     freq = 100;
-    servoMaxStep = 0.01;
+    servoMaxStep = 0.2;
     K = 0.03;
     constJTh = 20;
 
@@ -42,7 +42,7 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     dof = 3;
     num_features = 4;
     freq = 100;
-    servoMaxStep = 0.01;
+    servoMaxStep = 0.2;
     K = 0.03;
     constJTh = 20;
 
@@ -50,7 +50,7 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     continueLoop = true;
     targetReceived = true;
     // configure subscribers
-    J_sub = nh.subscribe("/visual_servo/Jacobian", 1, &VisualServoController::JacobianCallback, this);
+    J_sub = nh.subscribe("/visual_servo/image_Jacobian", 1, &VisualServoController::JacobianCallback, this);
     // containers initialization
     toolPos.resize(num_features);
     J.resize(num_features, dof);
@@ -78,14 +78,6 @@ void visual_servo::VisualServoController::targetCallback(const std_msgs::Float64
 
 void visual_servo::VisualServoController::setServoMaxStep(int step){
     servoMaxStep = step;
-}
-
-void visual_servo::VisualServoController::setUpdatePixStep(int step){
-    update_pix_step = step;
-}
-
-void visual_servo::VisualServoController::setUpdateEncStep(int step){
-    update_enc_step = step;
 }
 
 void visual_servo::VisualServoController::setK(double K_){
@@ -118,6 +110,7 @@ visual_servo::ToolDetector& detector){
     if (!targetReceived){
         ROS_INFO("Waiting for servo target ------");
         while((nh.ok()) && !targetReceived){
+            ros::spinOnce();
             loopRate.sleep();
         }
         ROS_INFO("Servo target received!");
@@ -128,6 +121,7 @@ visual_servo::ToolDetector& detector){
     if (!JChecked){
         ROS_INFO("Waiting for Jacobian being initialized ------");
         while((nh.ok()) && !JChecked){
+            ros::spinOnce();
             loopRate.sleep();
         }
         ROS_INFO("Jacobian received!");
@@ -141,21 +135,30 @@ visual_servo::ToolDetector& detector){
     toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
 
     controlError = targets-toolPos;
+
+    if (controlError.norm()<tolerance){
+        increment.setZero();
+        continueLoop = false;
+        ROS_INFO("Reach given accuracy, visual servo stopped!");
+        return;
+    }
     
     std::cout << "target: " << targets << std::endl;
     std::cout << "toolPos: " << toolPos << std::endl;
     std::cout << "control_error: " << controlError << std::endl;
 
-    Eigen::VectorXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
+    Eigen::MatrixXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
     increment = K*J_pinv*controlError;
     std::cout << "increment" << increment << std::endl;
 
-    if (increment.norm()>servoMaxStep*20){
-        limtVec(increment, servoMaxStep*50);
+    if (increment.norm()>servoMaxStep){
+        limtVec(increment, servoMaxStep);
     }
     else{
         ROS_INFO("Refining ---");
     }
+
+    std::cout << "increment after limit" << increment << std::endl;
 }
 
 void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
@@ -171,6 +174,7 @@ std::vector<visual_servo::ToolDetector>& detector_list){
     if (!targetReceived){
         ROS_INFO("Waiting for servo target ------");
         while((nh.ok()) && !targetReceived){
+            ros::spinOnce();
             loopRate.sleep();
         }
         ROS_INFO("Servo target received!");
@@ -179,6 +183,7 @@ std::vector<visual_servo::ToolDetector>& detector_list){
     if (!JChecked){
         ROS_INFO("Waiting for Jacobian being initialized ------");
         while((nh.ok()) && !JChecked){
+            ros::spinOnce();
             loopRate.sleep();
         }
         ROS_INFO("Jacobian received!");
@@ -199,6 +204,13 @@ std::vector<visual_servo::ToolDetector>& detector_list){
     targets << target1.x, target1.y, target2.x, target2.y;
 
     controlError = targets-toolPos;
+
+    if (controlError.norm()<tolerance){
+        increment.setZero();
+        continueLoop = false;
+        ROS_INFO("Reach given accuracy, visual servo stopped!");
+        return;
+    }
     
     std::cout << "target: " << targets << std::endl;
     std::cout << "toolPos: " << toolPos << std::endl;
@@ -208,12 +220,14 @@ std::vector<visual_servo::ToolDetector>& detector_list){
     increment = K*J_pinv*controlError;
     std::cout << "increment" << increment << std::endl;
 
-    if (increment.norm()>servoMaxStep*20){
-        limtVec(increment, servoMaxStep*50);
+    if (increment.norm()>servoMaxStep){
+        limtVec(increment, servoMaxStep);
     }
     else{
         ROS_INFO("Refining ---");
     }
+
+    std::cout << "increment after limit" << increment << std::endl;
 }
 
 
@@ -238,7 +252,7 @@ void visual_servo::VisualServoController::flat2eigen(Eigen::MatrixXd& M, std::ve
     }
 }
 
-void visual_servo::VisualServoController::limtVec(Eigen::VectorXd& v, int stepSize){
+void visual_servo::VisualServoController::limtVec(Eigen::VectorXd& v, double stepSize){
     double r;
     // a vector with abs of v
     Eigen::VectorXd abs_v(v.size());
@@ -256,7 +270,8 @@ void visual_servo::VisualServoController::limtVec(Eigen::VectorXd& v, int stepSi
     
     if (max_abs > stepSize){
         std::cout << "Enter limiting velocity!" << std::endl;
-        r = stepSize/max_abs;
+        r = stepSize*1.0/max_abs;
+        std::cout << "r: " << r << std::endl;
         v = r*v;
     }
 }

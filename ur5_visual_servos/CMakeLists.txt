@@ -160,6 +160,11 @@ target_link_libraries(async_move_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(cv_detection_test src/cv_detection_test.cpp)
 target_link_libraries(cv_detection_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(update_image_J src/update_image_J.cpp)
+target_link_libraries(update_image_J ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(visual_servo_position_test src/visual_servo_position_test.cpp)
+target_link_libraries(visual_servo_position_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

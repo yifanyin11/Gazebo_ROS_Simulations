@@ -13,16 +13,16 @@ int main(int argc, char** argv){
     ros::Rate rate(1000);
 
     // image topics
-    std::string img_topic = "/visual_servo/camera1/image_raw_1";
+    std::string img_topic = "/visual_servo/camera2/image_raw_2";
 
     // detection setups
     visual_servo::ImageCapturer cam(nh, img_topic);
-    visual_servo::ToolDetector detector(nh, img_topic, std::vector<int>{0, 100, 100, 5, 255, 255});
-    visual_servo::ToolDetector detector_tip(nh, img_topic, std::vector<int>{20, 100, 100, 30, 255, 255});
+    visual_servo::ToolDetector detector(nh, std::vector<int>{0, 100, 100, 5, 255, 255});
+    visual_servo::ToolDetector detector_tip(nh, std::vector<int>{20, 100, 100, 30, 255, 255});
 
     while(nh.ok()){
-        detector_tip.detect(cam);
-        detector_tip.drawDetectRes();
+        detector.detect(cam);
+        detector.drawDetectRes();
         rate.sleep();
     }
 
