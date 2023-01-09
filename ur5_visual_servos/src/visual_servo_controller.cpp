@@ -143,13 +143,13 @@ visual_servo::ToolDetector& detector){
         return;
     }
     
-    std::cout << "target: " << targets << std::endl;
-    std::cout << "toolPos: " << toolPos << std::endl;
-    std::cout << "control_error: " << controlError << std::endl;
+    // std::cout << "target: " << targets << std::endl;
+    // std::cout << "toolPos: " << toolPos << std::endl;
+    // std::cout << "control_error: " << controlError << std::endl;
 
     Eigen::MatrixXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
     increment = K*J_pinv*controlError;
-    std::cout << "increment" << increment << std::endl;
+    // std::cout << "increment" << increment << std::endl;
 
     if (increment.norm()>servoMaxStep){
         limtVec(increment, servoMaxStep);
@@ -158,7 +158,7 @@ visual_servo::ToolDetector& detector){
         ROS_INFO("Refining ---");
     }
 
-    std::cout << "increment after limit" << increment << std::endl;
+    // std::cout << "increment after limit" << increment << std::endl;
 }
 
 void visual_servo::VisualServoController::directionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
@@ -212,13 +212,13 @@ std::vector<visual_servo::ToolDetector>& detector_list){
         return;
     }
     
-    std::cout << "target: " << targets << std::endl;
-    std::cout << "toolPos: " << toolPos << std::endl;
-    std::cout << "control_error: " << controlError << std::endl;
+    // std::cout << "target: " << targets << std::endl;
+    // std::cout << "toolPos: " << toolPos << std::endl;
+    // std::cout << "control_error: " << controlError << std::endl;
 
     Eigen::VectorXd J_pinv = (J.transpose()*J).inverse()*J.transpose();
     increment = K*J_pinv*controlError;
-    std::cout << "increment" << increment << std::endl;
+    // std::cout << "increment" << increment << std::endl;
 
     if (increment.norm()>servoMaxStep){
         limtVec(increment, servoMaxStep);
@@ -227,7 +227,7 @@ std::vector<visual_servo::ToolDetector>& detector_list){
         ROS_INFO("Refining ---");
     }
 
-    std::cout << "increment after limit" << increment << std::endl;
+    // std::cout << "increment after limit" << increment << std::endl;
 }
 
 

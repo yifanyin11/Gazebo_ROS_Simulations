@@ -473,12 +473,12 @@
         <color rgba="0 0 0 1" />
     </material>
     <link name="robotiq_coupler">
-        <visual>
+        <!-- <visual>
             <geometry>
                 <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
             </geometry>
             <material name="flat_black" />
-        </visual>
+        </visual> -->
         <collision>
             <geometry>
                 <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
@@ -516,11 +516,11 @@
         <origin rpy="0 -1.5707963267948966 3.141592653589793" xyz="0 0 0.004" />
     </joint>
     <link name="robotiq_85_base_link">
-        <visual>
+        <!-- <visual>
             <geometry>
                 <mesh filename="package://robotiq_description/meshes/visual/robotiq_85_base_link.dae" />
             </geometry>
-        </visual>
+        </visual> -->
         <collision>
             <geometry>
                 <mesh filename="package://robotiq_description/meshes/collision/robotiq_85_base_link.stl" />
@@ -533,7 +533,7 @@
         </inertial>
     </link>
     <!-- Add the gripper indicator -->
-    <!-- <joint name="gripper_indicator_joint" type="fixed">
+    <joint name="gripper_indicator_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="gripper_indicator_link" />
         <origin rpy="0 0 0" xyz="0 0 0" />
@@ -542,15 +542,15 @@
     <link name="gripper_indicator_link">
         <visual>
             <geometry>
-              <sphere radius="0.06"/>
+              <sphere radius="0.01"/>
             </geometry>
             <material name="red"/>
         </visual>
     </link>
 
     <gazebo reference="gripper_indicator_link">
-        <material>Gazebo/Red</material>
-    </gazebo> -->
+        <material>Gazebo/Purple</material>
+    </gazebo>
 
     <!-- Add the needle/ screw -->
     <joint name="needle_tool_joint" type="fixed">
@@ -562,7 +562,7 @@
     <link name="needle_tool_link">
         <visual>
             <geometry>
-              <cylinder length="0.2" radius="0.01"/>
+              <cylinder length="0.2" radius="0.005"/>
             </geometry>
             <material name="white"/>
         </visual>
@@ -576,13 +576,13 @@
     <joint name="needle_tip_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="needle_tip_link" />
-        <origin rpy="0 1.57 0" xyz="0.21 0 0" />
+        <origin rpy="0 1.57 0" xyz="0.205 0 0" />
     </joint>
 
     <link name="needle_tip_link">
         <visual>
             <geometry>
-              <sphere radius="0.01"/>
+              <sphere radius="0.005"/>
             </geometry>
             <material name="white"/>
         </visual>
@@ -602,7 +602,7 @@
     <link name="frame_tool_link">
         <visual>
             <geometry>
-              <cylinder length="0.15" radius="0.01"/>
+              <cylinder length="0.15" radius="0.005"/>
             </geometry>
             <material name="white"/>
         </visual>
@@ -610,6 +610,27 @@
 
     <gazebo reference="frame_tool_link">
         <material>Gazebo/White</material>
+    </gazebo>
+
+    <!-- Add the frame tool tip -->
+
+    <joint name="frame_tip_joint" type="fixed">
+        <parent link="robotiq_85_base_link" />
+        <child link="frame_tip_link" />
+        <origin rpy="1.57 0 0" xyz="0 0.155 0" />
+    </joint>
+
+    <link name="frame_tip_link">
+        <visual>
+            <geometry>
+              <sphere radius="0.005"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <gazebo reference="frame_tip_link">
+        <material>Gazebo/SkyBlue</material>
     </gazebo>
 
     <!-- Gripper fingers - no visual version -->

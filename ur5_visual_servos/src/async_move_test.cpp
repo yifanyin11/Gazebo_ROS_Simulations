@@ -6,6 +6,13 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
+
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
+#include <moveit_msgs/RobotTrajectory.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
@@ -22,6 +29,18 @@ int main(int argc, char** argv)
     static const std::string PLANNING_GROUP_GRIPPER = "gripper";
     
     // Planning setups
+    namespace rvt = rviz_visual_tools;
+    moveit_visual_tools::MoveItVisualTools visual_tools("world");
+    visual_tools.deleteAllMarkers();
+    visual_tools.loadRemoteControl();
+
+    planning_scene_monitor::LockedPlanningSceneRW scene(visual_tools.getPlanningSceneMonitor());
+
+    scene->getCurrentStateNonConst().update();
+    robot_state::RobotState cur_state = scene->getCurrentStateNonConst();   
+
+    robot_model::RobotModelConstPtr robot_model = scene->getRobotModel();
+
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
     moveit::planning_interface::MoveGroupInterface move_group_interface_arm(PLANNING_GROUP_ARM);
     moveit::planning_interface::MoveGroupInterface move_group_interface_gripper(PLANNING_GROUP_GRIPPER);
@@ -42,6 +61,19 @@ int main(int argc, char** argv)
     move_group_interface_arm.setJointValueTarget(move_group_interface_arm.getNamedTargetValues("home"));
     
     bool success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+    moveit_msgs::RobotTrajectory trajectory_msg = my_plan_arm.trajectory_;
+
+    robot_trajectory::RobotTrajectory trajectory(robot_model, PLANNING_GROUP_ARM);
+
+    scene->getCurrentStateNonConst().update();
+    cur_state = scene->getCurrentStateNonConst();   
+
+    trajectory.setRobotTrajectoryMsg(cur_state, trajectory_msg);
+
+    double duration = trajectory.getWayPointDurationFromStart(trajectory.getWayPointCount()/2);
+
+    std::cout << "Duration: " << duration << std::endl;
 
     ROS_INFO_NAMED("pick_and_place", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
 

@@ -8,6 +8,8 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
+#include <moveit_msgs/RobotTrajectory.h>
+
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 
@@ -30,7 +32,7 @@ int main(int argc, char** argv){
             move_group_interface_arm.getCurrentState()->getJointModelGroup(PLANNING_GROUP_ARM);
     
     moveit::planning_interface::MoveGroupInterface::Plan my_plan_arm;
-    move_group_interface_arm.setMaxVelocityScalingFactor(0.05);
+    move_group_interface_arm.setMaxVelocityScalingFactor(0.02);
     move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
     bool success;
 
@@ -51,7 +53,7 @@ int main(int argc, char** argv){
     visual_servo::ImageCapturer cam1(nh, img_topic1);
     visual_servo::ImageCapturer cam2(nh, img_topic2);
     visual_servo::ToolDetector detector_target(nh, std::vector<int>{0, 100, 100, 5, 255, 255});
-    visual_servo::ToolDetector detector_tool(nh, std::vector<int>{20, 100, 100, 30, 255, 255});
+    visual_servo::ToolDetector detector_tool(nh, std::vector<int>{150, 150, 150, 160, 255, 255});
 
     std::cout << "Done setups" << std::endl;
 
@@ -76,7 +78,8 @@ int main(int argc, char** argv){
     targets << target1.x, target1.y, target2.x, target2.y;
     std::cout << "Done initialize targets" << std::endl;
 
-    double tol = 10.0;
+    double tol = 5.0;
+
     visual_servo::VisualServoController servo_controller(nh, tol, targets);
     std::cout << "Done initialize servo controller" << std::endl;
 
@@ -88,12 +91,7 @@ int main(int argc, char** argv){
         target_pose.position.y = target_pose.position.y+increment(1);
         target_pose.position.z = target_pose.position.z+increment(2);
         move_group_interface_arm.setPoseTarget(target_pose);
-
-        success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-        ROS_INFO_NAMED("visual_servo_position_test", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
-        // move_group_interface_arm.asyncMove();
         move_group_interface_arm.move();
-        // rate.sleep();
     }
 
 }
