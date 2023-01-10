@@ -2,6 +2,8 @@
 #define JACOBIAN_UPDATER_H
 
 #include <ros/ros.h>
+#include <math.h>  
+
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64MultiArray.h>
@@ -49,14 +51,27 @@ namespace visual_servo{
 
         int update_pix_step;
         double update_enc_step;
+
+        double update_pix_ang_step;
+        double update_enc_ang_step;
+
         double initStep;
+        double initStepOri;
 
         Eigen::VectorXd toolPos;
         Eigen::VectorXd lastToolPos;
         Eigen::VectorXd robotPos;
         Eigen::VectorXd lastRobotPos;
+
+        Eigen::VectorXd toolRot;
+        Eigen::VectorXd lastToolRot;
+        Eigen::VectorXd robotRot;
+        Eigen::VectorXd lastRobotRot;
+
         Eigen::MatrixXd J;
+        Eigen::MatrixXd J_ori;
         std::vector<double> J_flat;
+        std::vector<double> J_ori_flat;
 
         // publishers
         ros::Publisher J_pub;
@@ -71,13 +86,17 @@ namespace visual_servo{
         static bool runLM(const OptimData& optim_data, const std::vector<double>& initial_state, std::vector<double>& result);
         // initialization function
         void initializeJacobian(ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
+        void initializeJacobianOri(ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
         // update funcion
-        void updateJacobian(Eigen::VectorXd& del_Px, Eigen::VectorXd& del_x);
+        void updateJacobian(Eigen::VectorXd& del_Px, Eigen::VectorXd& del_x, bool if_ori);
         // main loop
-        void mainLoop(ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
+        void mainLoop(ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
         // utils
         static void flat2eigen(Eigen::MatrixXd& M, const double* flat);
         static void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
+        static void transform2PoseMsg(tf::Transform& transform, geometry_msgs::Pose& pose);
+        static void poseMsg2Transform(tf::Transform& transform, geometry_msgs::Pose& pose);
+        static void getToolRot(Eigen::VectorXd& toolRot, cv::Point& center1, cv::Point& tooltip1, cv::Point& frametip1, cv::Point& center2, cv::Point& tooltip2, cv::Point& frametip2);
     };
 
 }
