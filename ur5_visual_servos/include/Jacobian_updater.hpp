@@ -97,6 +97,7 @@ namespace visual_servo{
         static void transform2PoseMsg(tf::Transform& transform, geometry_msgs::Pose& pose);
         static void poseMsg2Transform(tf::Transform& transform, geometry_msgs::Pose& pose);
         static void getToolRot(Eigen::VectorXd& toolRot, cv::Point& center1, cv::Point& tooltip1, cv::Point& frametip1, cv::Point& center2, cv::Point& tooltip2, cv::Point& frametip2);
+        static void limitAngDisp(Eigen::VectorXd& angDisp);
     };
 
 }

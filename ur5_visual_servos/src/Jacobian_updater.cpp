@@ -614,12 +614,11 @@ void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eige
     OptimData data;
     data.del_Pr = del_Pr;
     data.del_r = del_r;
-    int count = 0;
     if (ori){
         std::vector<double> result(J_ori_flat.size());
         runLM(data, J_ori_flat, result);
         J_ori_flat = result;
-        flat2eigen(J_ori, J_ori_flat);
+        flat2eigen(J_ori, result);
     }
     else{
         std::vector<double> result(J_flat.size());
@@ -736,7 +735,7 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
 
         // std::cout << "J: " << J << std::endl;
 
-        std::cout << "J_ori: " << J_ori << std::endl;
+        // std::cout << "J_ori: " << J_ori << std::endl;
         
         // update J only if greater than a distance from the last update
         if (pixDisplFromLast.norm()>= update_pix_step || encDisplFromLast.norm()>= update_enc_step){
@@ -747,6 +746,8 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
 
         // update J_ori only if greater than a distance from the last update
         if (pixAngDisplFromLast.norm()>= update_pix_ang_step || encAngDisplFromLast.norm()>= update_enc_ang_step){
+            visual_servo::JacobianUpdater::limitAngDisp(pixAngDisplFromLast);
+            visual_servo::JacobianUpdater::limitAngDisp(encAngDisplFromLast);
             updateJacobian(pixAngDisplFromLast, encAngDisplFromLast, true);
             lastToolRot = toolRot;
             lastRobotRot = robotRot;
@@ -816,4 +817,12 @@ void visual_servo::JacobianUpdater::getToolRot(Eigen::VectorXd& toolRot, cv::Poi
     double theta21 = atan2((tooltip2-center2).y, (tooltip2-center2).x); 
     double theta22 = atan2((frametip2-center2).y, (frametip2-center2).x); 
     toolRot << theta11, theta12, theta21, theta22;
+}
+
+void visual_servo::JacobianUpdater::limitAngDisp(Eigen::VectorXd& angDisp){
+    for (int i=0; i<angDisp.size(); i++){
+        if (angDisp(i)<0.09){
+            angDisp(i) = 0.0;
+        }
+    }
 }

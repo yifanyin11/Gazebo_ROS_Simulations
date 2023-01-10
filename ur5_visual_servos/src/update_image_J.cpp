@@ -17,7 +17,7 @@ int main(int argc, char** argv){
 
     visual_servo::ToolDetector detector_toolcenter(nh, std::vector<int>{150, 150, 150, 160, 255, 255});
     visual_servo::ToolDetector detector_tooltip(nh, std::vector<int>{20, 100, 100, 30, 255, 255});
-    visual_servo::ToolDetector detector_frametip(nh, std::vector<int>{90, 150, 100, 110, 255,255});
+    visual_servo::ToolDetector detector_frametip(nh, std::vector<int>{100, 150, 100, 110, 255,255});
 
     std::vector<visual_servo::ToolDetector> detector_list{detector_toolcenter, detector_tooltip, detector_frametip};
     std::string J_topic = "/visual_servo/image_Jacobian";
