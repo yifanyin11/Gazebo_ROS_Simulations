@@ -91,6 +91,7 @@ namespace visual_servo{
         // update funcion
         void updateJacobian(Eigen::VectorXd& del_Px, Eigen::VectorXd& del_x, bool if_ori);
         // main loop
+        void mainLoopPos(ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
         void mainLoop(ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
         // utils
         static void flat2eigen(Eigen::MatrixXd& M, const double* flat);
