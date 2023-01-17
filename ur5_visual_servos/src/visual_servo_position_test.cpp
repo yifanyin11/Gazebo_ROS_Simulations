@@ -78,9 +78,9 @@ int main(int argc, char** argv){
     targets << target1.x, target1.y, target2.x, target2.y;
     std::cout << "Done initialize targets" << std::endl;
 
-    double tol = 5.0;
+    double tol = 1.0;
 
-    visual_servo::VisualServoController servo_controller(nh, tol, targets);
+    visual_servo::VisualServoController servo_controller(nh, targets, tol);
     std::cout << "Done initialize servo controller" << std::endl;
 
     Eigen::VectorXd increment;

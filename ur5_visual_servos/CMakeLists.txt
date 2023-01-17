@@ -166,6 +166,9 @@ target_link_libraries(update_image_J ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(visual_servo_position_test src/visual_servo_position_test.cpp)
 target_link_libraries(visual_servo_position_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(visual_servo_full_pose_test src/visual_servo_full_pose_test.cpp)
+target_link_libraries(visual_servo_full_pose_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

@@ -26,13 +26,63 @@ cv::Point visual_servo::ToolDetector::getCenter(){
 void visual_servo::ToolDetector::detect(visual_servo::ImageCapturer& cam){
     // update source image
     image = cam.getCurrentImage();
-    // std::cout << "Width : " << image.size().width << std::endl;
-    // std::cout << "Height: " << image.size().height << std::endl;
     // perform detection
     cv::Mat hsv, mask, col_sum, row_sum;
     // convert to hsv colorspace
     cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
-    // std::cout << "HSV converted!" << std::endl;
+    // find the red color within the boundaries
+    cv::inRange(hsv, lower_hsv, upper_hsv, mask);
+
+    // cv::namedWindow("mask");
+    // cv::imshow("mask", mask);
+    // cv::waitKey(0);
+    // cv::destroyAllWindows();
+
+    cv::reduce(mask, col_sum, 0, cv::REDUCE_SUM, CV_64FC1); 
+    cv::reduce(mask, row_sum, 1, cv::REDUCE_SUM, CV_64FC1); 
+    int start1, end1, start2, end2;
+    for (int i=0; i<col_sum.size[1]; ++i){
+        if (col_sum.at<double>(0,i)!=0){
+            start1 = i;
+            break;
+        }
+    }
+    for (int i=col_sum.size[1]-1; i>=0; --i){
+        if (col_sum.at<double>(0,i)!=0){
+            end1 = i;
+            break;
+        }
+    }
+    
+    for (int i=0; i<row_sum.size[0]; ++i){
+        if (row_sum.at<double>(i,0)!=0){
+            start2 = i;
+            break;
+        }
+    }
+    for (int i=row_sum.size[0]-1; i>=0; --i){
+        if (row_sum.at<double>(i,0)!=0){
+            end2 = i;
+            break;
+        }
+    }
+    tool_center.x = (start1+end1)/2.0;
+    tool_center.y = (start2+end2)/2.0;
+    corner1.x = start1;
+    corner1.y = end2;
+    corner2.x = end1;
+    corner2.y = start2;
+
+    while(nh.ok()){
+        ros::spinOnce();
+        break;
+    }
+}
+
+void visual_servo::ToolDetector::detect(cv::Mat& img){
+    cv::Mat hsv, mask, col_sum, row_sum;
+    // convert to hsv colorspace
+    cv::cvtColor(img, hsv, cv::COLOR_BGR2HSV);
     // find the red color within the boundaries
     cv::inRange(hsv, lower_hsv, upper_hsv, mask);
 

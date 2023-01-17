@@ -6,6 +6,7 @@
 #include <std_msgs/Bool.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
+#include<math.h>  
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -34,23 +35,35 @@ namespace visual_servo{
             int num_features;
             int dof;
             double tolerance;
+            double tolerance_ori;
             double K;
+            double K_ori;
             double constJTh; // within which J remains a const (in pixs)
+            double constJTh_ori;
+
             // bool continueLoop;
             double servoMaxStep;
+            double servoAngMaxStep;
 
             // flags
             bool targetReceived;
             bool JChecked;
+            bool closeUpdateJOri;
             bool continueLoop;
 
             Eigen::VectorXd toolPos;
+            Eigen::VectorXd toolRot;
 
             Eigen::VectorXd targets;
+
             Eigen::MatrixXd J;
+            Eigen::MatrixXd J_ori;
+
             Eigen::VectorXd controlError;
+            Eigen::VectorXd controlError_ori;
 
             std::vector<double> J_flat;
+            std::vector<double> J_ori_flat;
 
             // ros subscribers
             ros::Subscriber target_sub;
@@ -58,9 +71,9 @@ namespace visual_servo{
 
         public:
             // constructors
-            VisualServoController(ros::NodeHandle& nh, double& tol, bool target_topic);
+            VisualServoController(ros::NodeHandle& nh, bool target_topic, double tol, double tol_ori);
             // constructor with a fixed target
-            VisualServoController(ros::NodeHandle& nh, double& tol, Eigen::VectorXd& targets);
+            VisualServoController(ros::NodeHandle& nh, Eigen::VectorXd& targets, double tol, double tol_ori);
             // destructor
             ~VisualServoController(){};
             // callbacks
@@ -76,11 +89,12 @@ namespace visual_servo{
             Eigen::VectorXd getToolPosition();
             // member functions 
             void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
-            void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
+            void poseDirectionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
             // utils
-            void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
-            void limtVec(Eigen::VectorXd& v, double stepSize);
-
+            static void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
+            static void limInc(Eigen::VectorXd& v, double stepSize);
+            static void getToolRot(Eigen::VectorXd& toolRot, cv::Point& center1, cv::Point& tooltip1, cv::Point& frametip1, cv::Point& center2, cv::Point& tooltip2, cv::Point& frametip2);
+            static void stdAngControlError(Eigen::VectorXd& controlError_ori);
     };
 }
 #endif

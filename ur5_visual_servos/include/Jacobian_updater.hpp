@@ -37,6 +37,7 @@ namespace visual_servo{
         }
         Eigen::VectorXd del_Pr;
         Eigen::VectorXd del_r;
+        double J_norm;
     }; 
 
     class JacobianUpdater{

@@ -49,12 +49,13 @@ void visual_servo::JacobianUpdater::evalCostFunction(const double *params, int n
     Eigen::VectorXd error2 = (J_cur.transpose()*J_cur).inverse()*J_cur.transpose()*(optim_data->del_Pr) - (optim_data->del_r);
     int repeat = optim_data->del_r.size();
     for (int i = 0; i<num_features; ++i) {
-        fvec[i] = error1[i];
+        fvec[i] = abs(error1[i]);
     }
     for (int i = num_features; i<dof_robot+num_features; ++i) {
-        fvec[i] = error2[i-num_features];
+        fvec[i] = abs(error2[i-num_features]);
     }
-    for (int i = dof_robot+num_features; i<num_inputs; ++i) {
+    fvec[dof_robot+num_features] = abs(J_cur.norm()-optim_data->J_norm);
+    for (int i = dof_robot+num_features+1; i<num_inputs; ++i) {
         fvec[i] = 0.0;
     }
 
@@ -80,7 +81,7 @@ bool visual_servo::JacobianUpdater::runLM(const OptimData& optim_data, const std
     double* LM_wa4  = new double[m];
     int*    LM_ipvt = new int [dof];
 
-    double epsilon = 1e-20;
+    double epsilon = 1e-30;
     int maxcall = 100;
 
     lm_control_struct control;
@@ -615,12 +616,14 @@ void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eige
     data.del_Pr = del_Pr;
     data.del_r = del_r;
     if (ori){
+        data.J_norm = J_ori.norm();
         std::vector<double> result(J_ori_flat.size());
         runLM(data, J_ori_flat, result);
         J_ori_flat = result;
         flat2eigen(J_ori, result);
     }
     else{
+        data.J_norm = J.norm();
         std::vector<double> result(J_flat.size());
         runLM(data, J_flat, result);
         J_flat = result;
@@ -630,8 +633,8 @@ void visual_servo::JacobianUpdater::updateJacobian(Eigen::VectorXd& del_Pr, Eige
 
 void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, std::vector<visual_servo::ToolDetector> & detector_list){
     ros::Rate rate(10.0);
-    visual_servo::ToolDetector detector = detector_list[0];
-    initializeJacobian(cam1, cam2, detector);
+
+    initializeJacobian(cam1, cam2, detector_list[0]);
     initializeJacobianOri(cam1, cam2, detector_list);
 
     std_msgs::Float64MultiArray Jmsg;
@@ -641,26 +644,16 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
 
     double roll, pitch, yaw;
 
+    cv::Mat image1, image2;
+
     ROS_INFO("Jacobian initialized! Ready for Jacobian update.");
     // loopup current robot pose
     while (nh.ok()){
         try{
-            detector.detect(cam1);
-            toolPos1 = detector.getCenter();
-            detector.detect(cam2);
-            toolPos2 = detector.getCenter();
+            image1 = cam1.getCurrentImage();
+            image2 = cam2.getCurrentImage();
 
             listener.lookupTransform("/world", "/ee_link",  ros::Time(0), transform);
-
-            detector_list[1].detect(cam1);
-            tooltipPos1 = detector_list[1].getCenter();
-            detector_list[1].detect(cam2);
-            tooltipPos2 = detector_list[1].getCenter();
-
-            detector_list[2].detect(cam1);
-            toolframePos1 = detector_list[2].getCenter();
-            detector_list[2].detect(cam2);
-            toolframePos2 = detector_list[2].getCenter();
             break;
             }
         catch (tf::TransformException ex){
@@ -668,7 +661,22 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
             // rate.sleep();
             }   
     }
-    
+
+    detector_list[0].detect(image1);
+    toolPos1 = detector_list[0].getCenter();
+    detector_list[0].detect(image2);
+    toolPos2 = detector_list[0].getCenter();
+
+    detector_list[1].detect(image1);
+    tooltipPos1 = detector_list[1].getCenter();
+    detector_list[1].detect(image2);
+    tooltipPos2 = detector_list[1].getCenter();
+
+    detector_list[2].detect(image1);
+    toolframePos1 = detector_list[2].getCenter();
+    detector_list[2].detect(image2);
+    toolframePos2 = detector_list[2].getCenter();
+
     lastToolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
     lastRobotPos << transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z();
 
@@ -687,22 +695,11 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
             try{
                 //*** TODO ***
                 // overload detect function to detect a given image, and only capture images in this loop
-                detector.detect(cam1);
-                toolPos1 = detector.getCenter();
-                detector.detect(cam2);
-                toolPos2 = detector.getCenter();
+                image1 = cam1.getCurrentImage();
+                image2 = cam2.getCurrentImage();
 
                 listener.lookupTransform("/world", "/ee_link",  ros::Time(0), transform);
 
-                detector_list[1].detect(cam1);
-                tooltipPos1 = detector_list[1].getCenter();
-                detector_list[1].detect(cam2);
-                tooltipPos2 = detector_list[1].getCenter();
-
-                detector_list[2].detect(cam1);
-                toolframePos1 = detector_list[2].getCenter();
-                detector_list[2].detect(cam2);
-                toolframePos2 = detector_list[2].getCenter();
                 break;
                 }
             catch (tf::TransformException ex){
@@ -710,6 +707,21 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
                 }   
         }
         
+        detector_list[0].detect(image1);
+        toolPos1 = detector_list[0].getCenter();
+        detector_list[0].detect(image2);
+        toolPos2 = detector_list[0].getCenter();
+
+        detector_list[1].detect(image1);
+        tooltipPos1 = detector_list[1].getCenter();
+        detector_list[1].detect(image2);
+        tooltipPos2 = detector_list[1].getCenter();
+
+        detector_list[2].detect(image1);
+        toolframePos1 = detector_list[2].getCenter();
+        detector_list[2].detect(image2);
+        toolframePos2 = detector_list[2].getCenter();
+
         toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
         robotPos << transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z();
 
@@ -733,9 +745,9 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
         std::cout << "toolRotation: " << toolRot << std::endl;
         std::cout << "pixelAngDisFromLast: " << pixAngDisplFromLast << std::endl;
 
-        // std::cout << "J: " << J << std::endl;
+        std::cout << "J: " << J << std::endl;
 
-        // std::cout << "J_ori: " << J_ori << std::endl;
+        std::cout << "J_ori: " << J_ori << std::endl;
         
         // update J only if greater than a distance from the last update
         if (pixDisplFromLast.norm()>= update_pix_step || encDisplFromLast.norm()>= update_enc_step){
@@ -747,13 +759,19 @@ void visual_servo::JacobianUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
         // update J_ori only if greater than a distance from the last update
         if (pixAngDisplFromLast.norm()>= update_pix_ang_step || encAngDisplFromLast.norm()>= update_enc_ang_step){
             visual_servo::JacobianUpdater::limitAngDisp(pixAngDisplFromLast);
-            visual_servo::JacobianUpdater::limitAngDisp(encAngDisplFromLast);
+            // visual_servo::JacobianUpdater::limitAngDisp(encAngDisplFromLast);
             updateJacobian(pixAngDisplFromLast, encAngDisplFromLast, true);
             lastToolRot = toolRot;
             lastRobotRot = robotRot;
         } 
 
-        Jmsg.data = J_ori_flat;
+        std::vector<double> J_full = J_flat;
+        J_full.insert(J_full.end(), J_ori_flat.begin(), J_ori_flat.end());
+        // std::vector<double>::iterator ptr; 
+        // for (ptr=J_full.begin(); ptr<J_full.end(); ptr++){
+        //     std::cout << *ptr << "\n" << std::endl;
+        // }
+        Jmsg.data = J_full;
         J_pub.publish(Jmsg);
         ros::spinOnce();
         rate.sleep();
@@ -821,7 +839,7 @@ void visual_servo::JacobianUpdater::getToolRot(Eigen::VectorXd& toolRot, cv::Poi
 
 void visual_servo::JacobianUpdater::limitAngDisp(Eigen::VectorXd& angDisp){
     for (int i=0; i<angDisp.size(); i++){
-        if (angDisp(i)<0.09){
+        if (angDisp(i)<0.018){
             angDisp(i) = 0.0;
         }
     }
