@@ -335,7 +335,7 @@
         </inertial>
     </link>
     <link name="wrist_3_link">
-        <visual>
+        <!-- <visual>
             <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.0818" />
             <geometry>
                 <mesh filename="package://ur_description/meshes/ur5/visual/wrist3.dae" />
@@ -343,7 +343,7 @@
             <material name="LightGrey">
                 <color rgba="0.7 0.7 0.7 1.0" />
             </material>
-        </visual>
+        </visual> -->
         <collision>
             <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.0818" />
             <geometry>
@@ -1021,18 +1021,20 @@
             <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
             <inertia ixx="0.000002" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.000005" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.000006" />
         </inertial>
+        0.25 1.2 0.4 0 0 -1.57
+        0.75 1.0 0.4 0 0 -1.83
     </link> -->
    
   <joint name='camera_joint_1' type='fixed'>
       <axis xyz="0 1 0" />
-      <origin xyz="0.25 1.2 0.4" rpy="0 0 -1.57"/>
+      <origin xyz="0.75 1.0 0.4" rpy="0 0 -1.96"/>
       <parent link="world"/>
       <child link="camera_link_1"/>
   </joint>
     
   <joint name='camera_joint_2' type='fixed'>
       <axis xyz="0 1 0" />
-      <origin xyz="-0.4 1.2 0.4" rpy="0 0 -1.047"/>
+      <origin xyz="-0.4 0.6 0.4" rpy="0 0 -0.523"/>
       <parent link="world"/>
       <child link="camera_link_2"/>
   </joint>

@@ -25,9 +25,19 @@ int main(int argc, char** argv){
 
     visual_servo::ToolDetector detector_target(nh, std::vector<int>{0, 100, 100, 5, 255, 255});
     visual_servo::ToolDetector detector_target_tip1(nh, std::vector<int>{130, 30, 30, 140, 255, 120});
-    visual_servo::ToolDetector detector_target_tip2(nh, std::vector<int>{76, 150, 150, 96, 255, 255});
+    visual_servo::ToolDetector detector_target_tip2(nh, std::vector<int>{76, 100, 150, 96, 255, 255});
 
     while(nh.ok()){
+        detector_target.detect(cam1);
+        detector_target.drawDetectRes();
+        detector_target.detect(cam2);
+        detector_target.drawDetectRes();
+
+        detector_target_tip1.detect(cam1);
+        detector_target_tip1.drawDetectRes();
+        detector_target_tip1.detect(cam2);
+        detector_target_tip1.drawDetectRes();
+
         detector_target_tip2.detect(cam1);
         detector_target_tip2.drawDetectRes();
         detector_target_tip2.detect(cam2);

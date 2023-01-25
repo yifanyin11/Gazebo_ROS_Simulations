@@ -134,6 +134,9 @@ target_link_libraries(tool_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${Ope
 add_library(Jacobian_updater src/Jacobian_updater.cpp)
 target_link_libraries(Jacobian_updater ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
 
+add_library(gradient_updater src/gradient_updater.cpp)
+target_link_libraries(gradient_updater ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
 add_library(visual_servo_controller src/visual_servo_controller.cpp)
 target_link_libraries(visual_servo_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
 
@@ -168,6 +171,12 @@ target_link_libraries(visual_servo_position_test ${catkin_LIBRARIES} ${Boost_LIB
 
 add_executable(visual_servo_full_pose_test src/visual_servo_full_pose_test.cpp)
 target_link_libraries(visual_servo_full_pose_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(update_ori_gradient src/update_ori_gradient.cpp)
+target_link_libraries(update_ori_gradient ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(visual_servo_orientation_test src/visual_servo_orientation_test.cpp)
+target_link_libraries(visual_servo_orientation_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

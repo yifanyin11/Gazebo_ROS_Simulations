@@ -17,16 +17,18 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     servoMaxStep = 0.2;
     servoAngMaxStep = 0.25;
     K = 0.3;
-    K_ori = 0.1;
+    K_ori = 0.3;
     constJTh = 10;
     constJTh_ori = 0.16;
 
     JChecked = false;
+    GChecked = false;
     continueLoop = true;
     targetReceived = false;
     closeUpdateJOri = false;
     // configure subscribers
     J_sub = nh.subscribe("/visual_servo/Jacobian", 1, &VisualServoController::JacobianCallback, this);
+    G_sub = nh.subscribe("/visual_servo/orientation_gradient", 1, &VisualServoController::gradientCallback, this);
     if (target_topic){
         target_sub = nh.subscribe("/visual_servo/goal", 100, &VisualServoController::targetCallback, this);
     }
@@ -34,12 +36,14 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     targets.resize(num_features);
     toolPos.resize(num_features);
     toolRot.resize(num_features);
+    energy.resize(num_features);
     J.resize(num_features, dof);
     J_ori.resize(num_features, dof);
+    G_ori.resize(num_features, dof);
     controlError.resize(num_features);
     controlError(0)=DBL_MAX; // set norm of control error to max
-    controlError_ori.resize(num_features);
-    controlError_ori(0)=DBL_MAX; // set norm of control error to max
+    controlErrorOri.resize(num_features);
+    controlErrorOri(0)=DBL_MAX; // set norm of control error to max
 }
 
 visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, Eigen::VectorXd& targets_, double tol=5, double tol_ori=0.16) :
@@ -55,34 +59,52 @@ visual_servo::VisualServoController::VisualServoController(ros::NodeHandle& nh, 
     servoMaxStep = 0.2;
     servoAngMaxStep = 0.25;
     K = 0.3;
-    K_ori = 0.1;
+    K_ori = 0.3;
     constJTh = 10;
     constJTh_ori = 0.16;
 
     JChecked = false;
+    GChecked = false;
     continueLoop = true;
     targetReceived = true;
     closeUpdateJOri = false;
     // configure subscribers
     J_sub = nh.subscribe("/visual_servo/image_Jacobian", 1, &VisualServoController::JacobianCallback, this);
+    G_sub = nh.subscribe("/visual_servo/orientation_gradient", 1, &VisualServoController::gradientCallback, this);
     // containers initialization
     toolPos.resize(num_features);
     toolRot.resize(num_features);
+    energy.resize(num_features);
     J.resize(num_features, dof);
     J_ori.resize(num_features, dof);
+    G_ori.resize(num_features, dof);
     controlError.resize(num_features);
     controlError(0)=DBL_MAX; // set norm of control error to max
-    controlError_ori.resize(num_features);
-    controlError_ori(0)=DBL_MAX; // set norm of control error to max
+    controlErrorOri.resize(num_features);
+    controlErrorOri(0)=DBL_MAX; // set norm of control error to max
+}
+
+void visual_servo::VisualServoController::VisualServoController::gradientCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
+    G_ori_flat = msg->data;
+    flat2eigen(G_ori, G_ori_flat);
+    // if (controlErrorOri.norm()>constJTh_ori){
+    //     G_ori_flat = msg->data;
+    //     flat2eigenVec(G_ori, G_ori_flat);
+    // }
+    if (!GChecked){
+        GChecked = true;
+    }
 }
 
 void visual_servo::VisualServoController::JacobianCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
     // not updating J when control error is small
     if (msg->data.size()==dof*num_features){
-        if (controlError.norm()>constJTh){
         J_flat = msg->data;
         flat2eigen(J, J_flat);
-        }
+        // if (controlError.norm()>constJTh){
+        // J_flat = msg->data;
+        // flat2eigen(J, J_flat);
+        // }
     }
     else{
         std::vector<double> temp1(msg->data.begin(), msg->data.begin()+dof*num_features);
@@ -92,21 +114,6 @@ void visual_servo::VisualServoController::JacobianCallback(const std_msgs::Float
         J_ori_flat = temp2;
         flat2eigen(J_ori, J_ori_flat);
     }
-    // else{
-    //     std::vector<double> temp1(msg->data.begin(), msg->data.begin()+dof*num_features);
-    //     J_flat = temp1;
-    //     flat2eigen(J, J_flat);
-    //     if (controlError.norm()<constJTh && controlError_ori.norm()<constJTh_ori){
-    //         closeUpdateJOri = true;
-    //     }
-    //     else{
-    //         if (!closeUpdateJOri){
-    //             std::vector<double> temp2(msg->data.begin()+dof*num_features, msg->data.end());
-    //             J_ori_flat = temp2;
-    //             flat2eigen(J_ori, J_ori_flat);
-    //         }
-    //     }
-    // }
 
     if (!JChecked){
         JChecked = true;
@@ -175,8 +182,10 @@ visual_servo::ToolDetector& detector){
 
     detector.detect(cam1);
     cv::Point toolPos1 = detector.getCenter();
+    // detector.drawDetectRes();
     detector.detect(cam2);
     cv::Point toolPos2 = detector.getCenter();
+    // detector.drawDetectRes();
 
     toolPos << toolPos1.x, toolPos1.y, toolPos2.x, toolPos2.y;
 
@@ -205,6 +214,100 @@ visual_servo::ToolDetector& detector){
     }
 
     std::cout << "increment after limit" << increment << std::endl;
+}
+
+void visual_servo::VisualServoController::oriDirectionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
+std::vector<visual_servo::ToolDetector>& detector_list){
+
+    ros::Rate loopRate(freq);
+
+    while(nh.ok()){
+        ros::spinOnce();
+        break;
+    }
+
+    if (!targetReceived){
+        ROS_INFO("Waiting for servo target ------");
+        while((nh.ok()) && !targetReceived){
+            ros::spinOnce();
+            loopRate.sleep();
+        }
+        ROS_INFO("Servo target received!");
+    }
+
+    if (targets.size()!=num_features){
+        ROS_ERROR("Target vector size inconsistent! Should match: %d", num_features);
+    }
+
+    if (!GChecked){
+        ROS_INFO("Waiting for gradient being initialized ------");
+        while((nh.ok()) && !GChecked){
+            ros::spinOnce();
+            loopRate.sleep();
+        }
+        ROS_INFO("Gradient received!");
+    }
+
+    cv::Mat image1, image2;
+
+    cv::Point toolPos1, toolPos2;
+    cv::Point tooltipPos1, tooltipPos2;
+    cv::Point toolframePos1, toolframePos2;
+
+    image1 = cam1.getCurrentImage();
+    image2 = cam2.getCurrentImage();
+
+    detector_list[0].detect(image1);
+    toolPos1 = detector_list[0].getCenter();
+    detector_list[0].drawDetectRes(image1);
+    detector_list[0].detect(image2);
+    toolPos2 = detector_list[0].getCenter();
+    detector_list[0].drawDetectRes(image2);
+
+    detector_list[1].detect(image1);
+    tooltipPos1 = detector_list[1].getCenter();
+    detector_list[1].drawDetectRes(image1);
+    detector_list[1].detect(image2);
+    tooltipPos2 = detector_list[1].getCenter();
+    detector_list[1].drawDetectRes(image2);
+
+    detector_list[2].detect(image1);
+    toolframePos1 = detector_list[2].getCenter();
+    detector_list[2].drawDetectRes(image1);
+    detector_list[2].detect(image2);
+    toolframePos2 = detector_list[2].getCenter();
+    detector_list[2].drawDetectRes(image2);
+
+    visual_servo::VisualServoController::getToolRot(toolRot, toolPos1, tooltipPos1, toolframePos1, toolPos2, tooltipPos2, toolframePos2);
+    std::cout << "got tool rot!" << std::endl;
+    visual_servo::VisualServoController::calculateEnergyFunction(toolRot-targets, energy);
+
+    controlErrorOri = -1.0*energy; // target is the zero energy
+    std::cout << "control error assigned!" << std::endl;
+
+    if (controlErrorOri.norm()<tolerance_ori){
+        increment.setZero();
+        continueLoop = false;
+        ROS_INFO("Final orientation error: %.3f", visual_servo::VisualServoController::getRotDis(toolRot, targets));
+        ROS_INFO("Reach given accuracy, visual servo stopped!");
+        return;
+    }
+    
+    std::cout << "targets: " << targets << std::endl;
+    std::cout << "toolRot: " << toolRot << std::endl;
+
+    Eigen::MatrixXd G_ori_pinv = (G_ori.transpose()*G_ori).inverse()*G_ori.transpose();
+    increment = K_ori*G_ori_pinv*controlErrorOri;
+
+    if (increment.norm()>servoAngMaxStep){
+        limInc(increment, servoAngMaxStep);
+    }
+    else{
+        ROS_INFO("Refining ---");
+    }
+
+    std::cout << "increment: " << increment << std::endl;
+    std::cout << "\n" << std::endl;
 }
 
 void visual_servo::VisualServoController::poseDirectionIncrement(Eigen::VectorXd& increment, visual_servo::ImageCapturer& cam1, visual_servo::ImageCapturer& cam2, 
@@ -279,13 +382,13 @@ std::vector<visual_servo::ToolDetector>& detector_list){
 
     std::cout << "got tool rot!" << std::endl;
 
-    controlError_ori = target_ori-toolRot;
+    controlErrorOri = target_ori-toolRot;
 
     // *********************
-    // visual_servo::VisualServoController::stdAngControlError(controlError_ori);
+    // visual_servo::VisualServoController::stdAngControlError(controlErrorOri);
 
 
-    if (controlError.norm()<tolerance && controlError_ori.norm()<tolerance_ori){
+    if (controlError.norm()<tolerance && controlErrorOri.norm()<tolerance_ori){
         increment.setZero();
         continueLoop = false;
         ROS_INFO("Reach given accuracy, visual servo stopped!");
@@ -305,10 +408,10 @@ std::vector<visual_servo::ToolDetector>& detector_list){
 
     std::cout << "target_ori: " << target_ori << std::endl;
     std::cout << "toolRot: " << toolRot << std::endl;
-    std::cout << "control_error_ori: " << controlError_ori << std::endl;
+    std::cout << "control_error_ori: " << controlErrorOri << std::endl;
 
     Eigen::MatrixXd J_ori_pinv = (J_ori.transpose()*J_ori).inverse()*J_ori.transpose();
-    increment_ori = K_ori*J_ori_pinv*controlError_ori;
+    increment_ori = K_ori*J_ori_pinv*controlErrorOri;
 
     std::cout << "increment_ori: " << increment_ori << std::endl;
 
@@ -354,6 +457,19 @@ void visual_servo::VisualServoController::flat2eigen(Eigen::MatrixXd& M, std::ve
     }
 }
 
+void visual_servo::VisualServoController::flat2eigenVec(Eigen::VectorXd& V, std::vector<double> flat){
+    // check input
+    int size_flat = flat.size();
+    int size_V = V.size();
+    if (size_flat!=size_V){
+        ROS_ERROR("Dimension inconsistent! Cannot convert to vector (Eigen3).");
+        return;
+    }
+    for (int i=0; i<size_V; ++i){
+        V(i) = flat[i];
+    }
+}
+
 void visual_servo::VisualServoController::limInc(Eigen::VectorXd& v, double stepSize){
     double r;
     // a vector with abs of v
@@ -386,10 +502,34 @@ void visual_servo::VisualServoController::getToolRot(Eigen::VectorXd& toolRot, c
     toolRot << theta11, theta12, theta21, theta22;
 }
 
-void visual_servo::VisualServoController::stdAngControlError(Eigen::VectorXd& controlError_ori){
-    for (int i=0; i<controlError_ori.size(); i++){
-        if (abs(controlError_ori(i))>M_PI){
-            controlError_ori(i) = (signbit(controlError_ori(i)) ? 1.0 : -1.0)*(2*M_PI-abs(controlError_ori(i)));
+void visual_servo::VisualServoController::stdAngControlError(Eigen::VectorXd& controlErrorOri){
+    for (int i=0; i<controlErrorOri.size(); i++){
+        if (abs(controlErrorOri(i))>M_PI){
+            controlErrorOri(i) = (signbit(controlErrorOri(i)) ? 1.0 : -1.0)*(2*M_PI-abs(controlErrorOri(i)));
         }
     }
+}
+
+void visual_servo::VisualServoController::calculateEnergyFunction(Eigen::VectorXd delToolRot, Eigen::VectorXd& energy){
+    for (int i=0; i<energy.size(); ++i){
+        energy(i)=sin(delToolRot(i)/2.0);
+    }
+}
+
+double visual_servo::VisualServoController::getRotDis(Eigen::VectorXd& toolRot1, Eigen::VectorXd& toolRot2){
+    // check dimensions
+    if (toolRot1.size()!=toolRot2.size()){
+        ROS_ERROR("Error!!! Dimension not consistent!");
+    }
+    int n = toolRot1.size();
+    double dis_sq = 0.0;
+    for (int i=0; i<n; ++i){
+        bool sign1 = signbit(toolRot1(i)), sign2 = signbit(toolRot2(i));
+        if (sign1!=sign2){
+            if (sign1) toolRot1(i)+=2*M_PI;
+            else toolRot2(i)+=2*M_PI;
+        }
+        dis_sq+=(toolRot1(i)-toolRot2(i))*(toolRot1(i)-toolRot2(i));
+    }
+    return sqrt(dis_sq);
 }

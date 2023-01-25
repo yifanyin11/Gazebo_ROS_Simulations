@@ -23,7 +23,7 @@ int main(int argc, char** argv){
     std::string J_topic = "/visual_servo/image_Jacobian";
     visual_servo::JacobianUpdater J_updater(nh, J_topic);
 
-    J_updater.mainLoopPos(cam1, cam2, detector_list[0]);
+    J_updater.mainLoop(cam1, cam2, detector_list);
 
     ros::shutdown();
     return 0;

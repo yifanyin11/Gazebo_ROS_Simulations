@@ -36,6 +36,7 @@ namespace visual_servo{
         void detect(ImageCapturer& cam); // update source image with the cur frame from cam, perform detection using that image, update tool_center
         void detect(cv::Mat& img); 
         void drawDetectRes(); 
+        void drawDetectRes(cv::Mat img); 
     };
 } // namespace visual_servo
 

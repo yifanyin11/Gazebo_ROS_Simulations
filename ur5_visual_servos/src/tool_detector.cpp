@@ -141,3 +141,13 @@ void visual_servo::ToolDetector::drawDetectRes(){
     cv::waitKey(0);
     cv::destroyAllWindows();
 }
+
+void visual_servo::ToolDetector::drawDetectRes(cv::Mat img_){
+    cv::Mat img = img_.clone();
+    cv::rectangle(img, corner1, corner2, cv::Scalar(0, 0, 0), 1, cv::LINE_8);
+    cv::circle(img, tool_center, 3, cv::Scalar(255, 0, 0), -1);
+    cv::namedWindow("Detection_Result");
+    cv::imshow("Detection_Result", img);
+    cv::waitKey(0);
+    cv::destroyAllWindows();
+}
