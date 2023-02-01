@@ -55,6 +55,8 @@ int main(int argc, char** argv){
     tf::Matrix3x3(transform_target.getRotation()).getRPY(roll, pitch, yaw);
 
     ros::Rate rate(10);
+    // target topics
+    std::string t_topic = "/visual_servo/targets";
     // image topics
     std::string img_topic1 = "/visual_servo/camera1/image_raw_1";
     std::string img_topic2 = "/visual_servo/camera2/image_raw_2";
@@ -80,38 +82,8 @@ int main(int argc, char** argv){
     cv::Point target_tooltipPos1, target_tooltipPos2;
     cv::Point target_toolframePos1, target_toolframePos2;
 
-    Eigen::VectorXd targets;
-
-    targets.resize(num_features);
-
-    targets << 1.5708, 2.63449, 1.5708, -2.98894;
-
-    // detector_target.detect(cam1);
-    // target1 = detector_target.getCenter();
-    // detector_target.drawDetectRes();
-    // detector_target.detect(cam2);
-    // target2 = detector_target.getCenter();
-    // detector_target.drawDetectRes();
-
-    // detector_target_tooltip.detect(cam1);
-    // target_tooltipPos1 = detector_target_tooltip.getCenter();
-    // detector_target_tooltip.drawDetectRes();
-    // detector_target_tooltip.detect(cam2);
-    // target_tooltipPos2 = detector_target_tooltip.getCenter();
-    // detector_target_tooltip.drawDetectRes();
-
-    // detector_target_frametip.detect(cam1);
-    // target_toolframePos1 = detector_target_frametip.getCenter();
-    // detector_target_frametip.drawDetectRes();
-    // detector_target_frametip.detect(cam2);
-    // target_toolframePos2 = detector_target_frametip.getCenter();
-    // detector_target_frametip.drawDetectRes();
-
-    // visual_servo::VisualServoController::getToolRot(targets, target1, target_tooltipPos1, target_toolframePos1, target2, target_tooltipPos2, target_toolframePos2);
-
-    // std::cout << "Done initialize targets" << targets << std::endl;
-
-    visual_servo::VisualServoController servo_controller(nh, targets, 5, 0.1);
+    // visual_servo::VisualServoController servo_controller(nh, t_topic, 5, 0.05);
+    visual_servo::VisualServoController servo_controller(nh, t_topic, 5, 0.05);
 
     std::cout << "Done initialize servo controller" << std::endl;
 
@@ -121,6 +93,7 @@ int main(int argc, char** argv){
     std::vector<visual_servo::ToolDetector> detector_list{detector_toolcenter, detector_tooltip, detector_frametip};
 
     while(nh.ok()&&(!servo_controller.stopSign())){
+        // servo_controller.uniOriDirectionIncrement(increment, cam1, cam2, detector_list);
         servo_controller.oriDirectionIncrement(increment, cam1, cam2, detector_list);
         std::cout << "Done increment" << std::endl;
 

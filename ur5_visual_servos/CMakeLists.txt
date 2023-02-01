@@ -178,6 +178,9 @@ target_link_libraries(update_ori_gradient ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 add_executable(visual_servo_orientation_test src/visual_servo_orientation_test.cpp)
 target_link_libraries(visual_servo_orientation_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(target_publisher src/target_publisher.cpp)
+target_link_libraries(target_publisher ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

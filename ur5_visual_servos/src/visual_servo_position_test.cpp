@@ -45,6 +45,9 @@ int main(int argc, char** argv){
     target_pose.position = current_pose.pose.position;
 
     ros::Rate rate(10);
+    // target topics
+    std::string t_topic = "/visual_servo/targets";
+
     // image topics
     std::string img_topic1 = "/visual_servo/camera1/image_raw_1";
     std::string img_topic2 = "/visual_servo/camera2/image_raw_2";
@@ -55,32 +58,9 @@ int main(int argc, char** argv){
     visual_servo::ToolDetector detector_target(nh, std::vector<int>{0, 100, 100, 5, 255, 255});
     visual_servo::ToolDetector detector_tool(nh, std::vector<int>{150, 150, 150, 160, 255, 255});
 
-    std::cout << "Done setups" << std::endl;
+    double tol = 3.0;
 
-    cv::Point target1, target2;
-    detector_target.detect(cam1);
-    std::cout << "Done detect target1" << std::endl;
-    target1 = detector_target.getCenter();
-    detector_target.drawDetectRes();
-    std::cout << "Done assign target1" << std::endl;
-    detector_target.detect(cam2);
-    std::cout << "Done detect target2" << std::endl;
-    target2 = detector_target.getCenter();
-    detector_target.drawDetectRes();
-    std::cout << "Done assign target2" << std::endl;
-
-    std::cout << "Done detect targets" << std::endl;
-    
-    int num_features = 4;
-
-    Eigen::VectorXd targets;
-    targets.resize(num_features);
-    targets << target1.x, target1.y, target2.x, target2.y;
-    std::cout << "Done initialize targets" << std::endl;
-
-    double tol = 2.0;
-
-    visual_servo::VisualServoController servo_controller(nh, targets, tol);
+    visual_servo::VisualServoController servo_controller(nh, t_topic, tol);
     std::cout << "Done initialize servo controller" << std::endl;
 
     Eigen::VectorXd increment;

@@ -55,16 +55,22 @@ namespace visual_servo{
             Eigen::VectorXd toolPos;
             Eigen::VectorXd toolRot;
             Eigen::VectorXd energy;
+            Eigen::VectorXd toolRotU;
+            Eigen::VectorXd energyU;
 
+            Eigen::VectorXd target_pos;
+            Eigen::VectorXd target_ori;
             Eigen::VectorXd targets;
 
             Eigen::MatrixXd J;
             Eigen::MatrixXd J_ori;
 
             Eigen::MatrixXd G_ori;
+            Eigen::MatrixXd G_ori_uni;
 
             Eigen::VectorXd controlError;
             Eigen::VectorXd controlErrorOri;
+            Eigen::VectorXd controlErrorOriU;
 
             std::vector<double> J_flat;
             std::vector<double> J_ori_flat;
@@ -77,7 +83,7 @@ namespace visual_servo{
 
         public:
             // constructors
-            VisualServoController(ros::NodeHandle& nh, bool target_topic, double tol, double tol_ori);
+            VisualServoController(ros::NodeHandle& nh, std::string target_topic, double tol, double tol_ori);
             // constructor with a fixed target
             VisualServoController(ros::NodeHandle& nh, Eigen::VectorXd& targets, double tol, double tol_ori);
             // destructor
@@ -97,15 +103,17 @@ namespace visual_servo{
             // member functions 
             void directionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, ToolDetector& detector);
             void oriDirectionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
+            void uniOriDirectionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
             void poseDirectionIncrement(Eigen::VectorXd& inc, ImageCapturer& cam1, ImageCapturer& cam2, std::vector<ToolDetector>& detector_list);
             // utils
+            static void vecEigen2std(Eigen::VectorXd& ve, std::vector<double>& vs);
             static void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
             static void flat2eigenVec(Eigen::VectorXd& V, std::vector<double> flat);
             static void limInc(Eigen::VectorXd& v, double stepSize);
             static void getToolRot(Eigen::VectorXd& toolRot, cv::Point& center1, cv::Point& tooltip1, cv::Point& frametip1, cv::Point& center2, cv::Point& tooltip2, cv::Point& frametip2);
             static void stdAngControlError(Eigen::VectorXd& controlErrorOri);
             static void calculateEnergyFunction(Eigen::VectorXd delToolRot, Eigen::VectorXd& energy);
-            static double getRotDis(Eigen::VectorXd& toolRot1, Eigen::VectorXd& toolRot2);
+            static double getRotDis(Eigen::VectorXd toolRot1, Eigen::VectorXd toolRot2);
     };
 }
 #endif

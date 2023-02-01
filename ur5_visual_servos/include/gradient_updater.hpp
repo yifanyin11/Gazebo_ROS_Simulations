@@ -46,6 +46,7 @@ namespace visual_servo{
         tf::TransformListener listener;
         tf::StampedTransform transform;
         std::string G_topic;
+        std::string T_topic;
 
         int dof_robot;
         int num_features;
@@ -53,6 +54,8 @@ namespace visual_servo{
         double update_enc_ang_step;
 
         double initStepOri;
+
+        bool Tchecked;
         
         Eigen::VectorXd target_ori;
 
@@ -68,12 +71,16 @@ namespace visual_servo{
 
         // publishers
         ros::Publisher G_pub;
+        ros::Subscriber T_sub;
 
     public:
         // constructors
-        GradientUpdater(ros::NodeHandle& nh, std::string& toolPos_topic, Eigen::VectorXd& target_ori);
+        GradientUpdater(ros::NodeHandle& nh, std::string& G_topic_, Eigen::VectorXd& target_ori);
+        GradientUpdater(ros::NodeHandle& nh, std::string& G_topic_, std::string& T_topic_);
         // destructor
         ~GradientUpdater(){};
+        // callbacks
+        void targetCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
         // static functions for optimization
         static void evalCostFunction(const double *params, int num_inputs, const void *inputs, double *fvec, int *info);
         static bool runLM(const OptimDataG& optim_data, const std::vector<double>& initial_state, std::vector<double>& result);
@@ -86,6 +93,7 @@ namespace visual_servo{
         // utils
         static void flat2eigen(Eigen::MatrixXd& M, const double* flat);
         static void flat2eigen(Eigen::MatrixXd& M, std::vector<double> flat);
+        static void flat2eigenVec(Eigen::VectorXd& V, std::vector<double> flat);
         static void transform2PoseMsg(tf::Transform& transform, geometry_msgs::Pose& pose);
         static void poseMsg2Transform(tf::Transform& transform, geometry_msgs::Pose& pose);
         static void getToolRot(Eigen::VectorXd& toolRot, cv::Point& center1, cv::Point& tooltip1, cv::Point& frametip1, cv::Point& center2, cv::Point& tooltip2, cv::Point& frametip2);

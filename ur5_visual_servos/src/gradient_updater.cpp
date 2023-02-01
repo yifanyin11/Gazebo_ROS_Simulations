@@ -14,6 +14,8 @@ nh(nh){
 
     initStepOri = 0.15;
 
+    Tchecked = true;
+
     energy.resize(num_features);
     lastEnergy.resize(num_features);
     toolRot.resize(num_features);
@@ -26,6 +28,47 @@ nh(nh){
 
     // publishers
     G_pub = nh.advertise<std_msgs::Float64MultiArray>(G_topic, 1);
+}
+
+visual_servo::GradientUpdater::GradientUpdater(ros::NodeHandle& nh, std::string& G_topic_, std::string& T_topic_):
+nh(nh){
+    
+    // initializations
+    
+    G_topic = G_topic_;
+    T_topic = T_topic_;
+    dof_robot = 3;
+    num_features = 4;
+
+    update_enc_ang_step = M_PI/12;
+
+    initStepOri = 0.15;
+
+    Tchecked = false;
+
+    target_ori.resize(num_features);
+    energy.resize(num_features);
+    lastEnergy.resize(num_features);
+    toolRot.resize(num_features);
+    lastToolRot.resize(num_features);
+    robotRot.resize(dof_robot);
+    lastRobotRot.resize(dof_robot);
+
+    G_ori.resize(num_features, dof_robot);
+    G_ori_flat.resize(dof_robot*num_features);
+
+    // subscribers
+    T_sub = nh.subscribe(T_topic, 1, &GradientUpdater::targetCallback, this);
+
+    // publishers
+    G_pub = nh.advertise<std_msgs::Float64MultiArray>(G_topic, 1);
+}
+
+void visual_servo::GradientUpdater::targetCallback(const std_msgs::Float64MultiArray::ConstPtr& msg){
+    target_ori << msg->data[4], msg->data[5], msg->data[6], msg->data[7];
+    if (!Tchecked){
+        Tchecked = true;
+    }
 }
 
 void visual_servo::GradientUpdater::evalCostFunction(const double *params, int num_inputs, const void *inputs, double *fvec, int *info)
@@ -42,13 +85,13 @@ void visual_servo::GradientUpdater::evalCostFunction(const double *params, int n
     Eigen::VectorXd error2 = (G_cur.transpose()*G_cur).inverse()*G_cur.transpose()*(optim_data->del_Pr) - (optim_data->del_r);
 
     for (int i = 0; i<num_features; ++i) {
-        fvec[i] = abs(error1[i]);
+        fvec[i] = error1[i];
     }
     for (int i = num_features; i<dof_robot+num_features; ++i) {
-        fvec[i] = abs(error2[i-num_features]);
+        fvec[i] = error2[i-num_features];
     }
-    // fvec[dof_robot+num_features] = abs(J_cur.norm()-optim_data->J_norm);
-    for (int i = dof_robot+num_features; i<num_inputs; ++i) {
+    fvec[dof_robot+num_features] = G_cur.norm()-optim_data->G_norm;
+    for (int i = dof_robot+num_features+1; i<num_inputs; ++i) {
         fvec[i] = 0.0;
     }
 
@@ -141,14 +184,14 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     // Ros setups
     ros::AsyncSpinner spinner(4);
     spinner.start();
-    
+
     // MOVEIT planning setups
     static const std::string PLANNING_GROUP_ARM = "ur5_arm";
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
     moveit::planning_interface::MoveGroupInterface move_group_interface_arm(PLANNING_GROUP_ARM);
     const robot_state::JointModelGroup* joint_model_group =
             move_group_interface_arm.getCurrentState()->getJointModelGroup(PLANNING_GROUP_ARM);
-    
+
     moveit::planning_interface::MoveGroupInterface::Plan my_plan_arm;
     move_group_interface_arm.setMaxVelocityScalingFactor(0.3);
     move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
@@ -171,7 +214,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
 
     cv::Point tooltip_drl2, tooltip_drr2, tooltip_dpl2, tooltip_dpr2, tooltip_dyl2, tooltip_dyr2; // tooltip for cam2
     cv::Point toolframe_drl2, toolframe_drr2, toolframe_dpl2, toolframe_dpr2, toolframe_dyl2, toolframe_dyr2; // tool frame tip for cam2
-    
+
     // get current pose
     geometry_msgs::PoseStamped current_pose;
     current_pose = move_group_interface_arm.getCurrentPose("ee_link");
@@ -180,7 +223,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     geometry_msgs::Pose target_pose;
     target_pose.orientation = current_pose.pose.orientation;
     target_pose.position = current_pose.pose.position;
-
+    
     // define variables for transform calculation
     double roll, pitch, yaw;
     tf::Quaternion q_target;
@@ -207,7 +250,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to r- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at r-
     detector_list[1].detect(cam1);
@@ -233,7 +276,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to r+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at r+
     detector_list[1].detect(cam1);
@@ -259,7 +302,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to p- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at p-
     detector_list[1].detect(cam1);
@@ -285,7 +328,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to p+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at p+
     detector_list[1].detect(cam1);
@@ -311,7 +354,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to y- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at y-
     detector_list[1].detect(cam1);
@@ -337,7 +380,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to y+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at y+
     detector_list[1].detect(cam1);
@@ -363,7 +406,7 @@ void visual_servo::GradientUpdater::initialize(visual_servo::ImageCapturer& cam1
     ROS_INFO_NAMED("update_image_G", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
 
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // calculate G
     // define delta thetas
@@ -445,6 +488,13 @@ void visual_servo::GradientUpdater::mainLoop(visual_servo::ImageCapturer& cam1, 
     double roll, pitch, yaw;
 
     cv::Mat image1, image2;
+
+    ROS_INFO("Waiting for servo target ...");
+    while(!Tchecked && nh.ok()){
+        ros::spinOnce();
+        rate.sleep();
+    }
+    ROS_INFO("Servo target received!");
 
     ROS_INFO("Gradient initialized! Ready for gradient update.");
     // loopup current robot pose
@@ -586,6 +636,19 @@ void visual_servo::GradientUpdater::flat2eigen(Eigen::MatrixXd& M, std::vector<d
     }
 }
 
+void visual_servo::GradientUpdater::flat2eigenVec(Eigen::VectorXd& V, std::vector<double> flat){
+    // check input
+    int size_flat = flat.size();
+    int size_V = V.size();
+    if (size_flat!=size_V){
+        ROS_ERROR("Dimension inconsistent! Cannot convert to vector (Eigen3).");
+        return;
+    }
+    for (int i=0; i<size_V; ++i){
+        V(i) = flat[i];
+    }
+}
+
 void visual_servo::GradientUpdater::transform2PoseMsg(tf::Transform& transform, geometry_msgs::Pose& pose){
     pose.position.x = transform.getOrigin().x();
     pose.position.y = transform.getOrigin().y();
@@ -612,6 +675,7 @@ void visual_servo::GradientUpdater::getToolRot(Eigen::VectorXd& toolRot, cv::Poi
 
 void visual_servo::GradientUpdater::calculateEnergyFunction(Eigen::VectorXd delToolRot, Eigen::VectorXd& energy){
     for (int i=0; i<energy.size(); ++i){
-        energy(i)=sin(delToolRot(i)/2.0);
+        // energy(i)=sin(delToolRot(i)/2.0);
+        energy(i)=-cos(delToolRot(i))+1;
     }
 }

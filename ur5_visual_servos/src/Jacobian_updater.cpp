@@ -49,12 +49,12 @@ void visual_servo::JacobianUpdater::evalCostFunction(const double *params, int n
     Eigen::VectorXd error2 = (J_cur.transpose()*J_cur).inverse()*J_cur.transpose()*(optim_data->del_Pr) - (optim_data->del_r);
     int repeat = optim_data->del_r.size();
     for (int i = 0; i<num_features; ++i) {
-        fvec[i] = abs(error1[i]);
+        fvec[i] = error1[i];
     }
     for (int i = num_features; i<dof_robot+num_features; ++i) {
-        fvec[i] = abs(error2[i-num_features]);
+        fvec[i] = error2[i-num_features];
     }
-    fvec[dof_robot+num_features] = abs(J_cur.norm()-optim_data->J_norm);
+    fvec[dof_robot+num_features] = J_cur.norm()-optim_data->J_norm;
     for (int i = dof_robot+num_features+1; i<num_inputs; ++i) {
         fvec[i] = 0.0;
     }
@@ -161,14 +161,14 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     move_group_interface_arm.setMaxAccelerationScalingFactor(0.01);
     bool success;
 
-    // Move to home position
-    move_group_interface_arm.setJointValueTarget(move_group_interface_arm.getNamedTargetValues("home"));
+    // // Move to home position
+    // move_group_interface_arm.setJointValueTarget(move_group_interface_arm.getNamedTargetValues("home"));
     
-    success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    // success = (move_group_interface_arm.plan(my_plan_arm) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-    ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
+    // ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
 
-    move_group_interface_arm.move();
+    // move_group_interface_arm.move();
 
     // define points
     cv::Point tool_dxl1, tool_dyl1, tool_dzl1, tool_dxr1, tool_dyr1, tool_dzr1;
@@ -188,7 +188,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to x- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x-
     detector.detect(cam1);
@@ -203,7 +203,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to x+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x+
     detector.detect(cam1);
@@ -220,7 +220,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to y- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at y-
     detector.detect(cam1);
@@ -236,7 +236,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to y+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at x+
     detector.detect(cam1);
@@ -253,7 +253,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to z- finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at z-
     detector.detect(cam1);
@@ -269,7 +269,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
     std::cout << "move to z+ finished ..." << std::endl;
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // detect tool image position at z+
     detector.detect(cam1);
@@ -285,7 +285,7 @@ void visual_servo::JacobianUpdater::initializeJacobian(visual_servo::ImageCaptur
     ROS_INFO_NAMED("update_image_J", "Visualizing plan (pose goal) %s", success ? "" : "FAILED");
     move_group_interface_arm.move();
 
-    ros::Duration(0.5).sleep();
+    ros::Duration(1.0).sleep();
 
     // calculate J
     double du1overdx = (tool_dxr1.x-tool_dxl1.x)/(2*initStep);
