@@ -533,7 +533,7 @@
         </inertial>
     </link>
     <!-- Add the gripper indicator -->
-    <joint name="gripper_indicator_joint" type="fixed">
+    <!-- <joint name="gripper_indicator_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="gripper_indicator_link" />
         <origin rpy="0 0 0" xyz="0 0 0" />
@@ -550,10 +550,10 @@
 
     <gazebo reference="gripper_indicator_link">
         <material>Gazebo/Purple</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Add the needle/ screw -->
-    <joint name="needle_tool_joint" type="fixed">
+    <!-- <joint name="needle_tool_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="needle_tool_link" />
         <origin rpy="0 1.57 0" xyz="0.1 0 0" />
@@ -570,10 +570,10 @@
 
     <gazebo reference="needle_tool_link">
         <material>Gazebo/White</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Add the needle/ screw tip -->
-    <joint name="needle_tip_joint" type="fixed">
+    <!-- <joint name="needle_tip_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="needle_tip_link" />
         <origin rpy="0 1.57 0" xyz="0.205 0 0" />
@@ -590,10 +590,10 @@
 
     <gazebo reference="needle_tip_link">
         <material>Gazebo/Yellow</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Add the frame tool -->
-    <joint name="frame_tool_joint" type="fixed">
+    <!-- <joint name="frame_tool_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="frame_tool_link" />
         <origin rpy="1.57 0 0" xyz="0 0.075 0" />
@@ -610,11 +610,11 @@
 
     <gazebo reference="frame_tool_link">
         <material>Gazebo/White</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Add the frame tool tip -->
 
-    <joint name="frame_tip_joint" type="fixed">
+    <!-- <joint name="frame_tip_joint" type="fixed">
         <parent link="robotiq_85_base_link" />
         <child link="frame_tip_link" />
         <origin rpy="1.57 0 0" xyz="0 0.155 0" />
@@ -631,7 +631,7 @@
 
     <gazebo reference="frame_tip_link">
         <material>Gazebo/SkyBlue</material>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Gripper fingers - no visual version -->
     <joint name="robotiq_85_left_knuckle_joint" type="revolute">

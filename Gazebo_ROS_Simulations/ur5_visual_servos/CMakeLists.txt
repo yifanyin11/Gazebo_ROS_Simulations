@@ -140,6 +140,9 @@ target_link_libraries(gradient_updater ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${
 add_library(visual_servo_controller src/visual_servo_controller.cpp)
 target_link_libraries(visual_servo_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
 
+add_library(pixel_picker src/pixel_picker.cpp)
+target_link_libraries(pixel_picker ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_INCLUDE_DIRS})
+
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/ur5_visual_servos.cpp
 # )
@@ -161,7 +164,7 @@ add_executable(async_move_test src/async_move_test.cpp)
 target_link_libraries(async_move_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(cv_detection_test src/cv_detection_test.cpp)
-target_link_libraries(cv_detection_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(cv_detection_test pixel_picker ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(update_image_J src/update_image_J.cpp)
 target_link_libraries(update_image_J ${catkin_LIBRARIES} ${Boost_LIBRARIES})
